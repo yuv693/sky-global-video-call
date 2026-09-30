@@ -1,1 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sky Global Video Call</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #38bdf8;
+            margin-bottom: 5px;
+        }
+        p {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .video-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            margin-top: 20px;
+        }
+        video {
+            width: 100%;
+            max-width: 350px;
+            height: 250px;
+            background: #1e293b;
+            border-radius: 12px;
+            border: 2px solid #38bdf8;
+            object-fit: cover;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #start-btn {
+            background-color: #22c55e;
+            color: white;
+        }
+        #stop-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+    </style>
+</head>
+<body>
 
+    <h1>Sky Global Video Call</h1>
+    <p>Connecting the World, Without Limits</p>
+
+    <div class="video-container">
+        <div>
+            <p>Aapka Camera (Local View)</p>
+            <video id="localVideo" autoplay playsinline muted></video>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="start-btn" onclick="startCamera()">Camera On karo</button>
+        <button id="stop-btn" onclick="stopCamera()">Band karo</button>
+    </div>
+
+    <script>
+        let localStream = null;
+
+        async function startCamera() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                });
+
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = localStream;
+                alert("Camera successfully chalu ho gaya hai!");
+            } catch (error) {
+                console.error("Camera access karne mein error aayi:", error);
+                alert("Camera permission nahi mili ya koi error hai!");
+            }
+        }
+
+        function stopCamera() {
+            if (localStream) {
+                let tracks = localStream.getTracks();
+                tracks.forEach(track => track.stop());
+                document.getElementById('localVideo').srcObject = null;
+                alert("Camera band ho gaya hai.");
+            }
+        }
+    </script>
+
+</body>
+</html>
