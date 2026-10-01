@@ -4,108 +4,382 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sky Global Video Call</title>
+    <!-- PeerJS Library -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #0f172a;
-            color: white;
-            text-align: center;
+            color: #ffffff;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        h1 {
-            color: #38bdf8;
-            margin-bottom: 5px;
+        h2 { color: #38bdf8; margin-bottom: 5px; margin-top: 0; text-align: center; }
+        .card {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+            text-align: center;
+            border: 1px solid #334155;
         }
-        p {
-            color: #94a3b8;
-            font-size: 14px;
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
         }
+        input {
+            width: 75%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        .mic-btn {
+            background: #475569;
+            color: white;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .mic-btn.listening {
+            background: #dc2626; /* Record hote waqt laal rang */
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        button {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 4px;
+            width: 85%;
+        }
+        button:hover { background: #0369a1; }
+        #switch-btn { background-color: #ea580c; display: none; width: auto; padding: 8px 15px; }
+        #switch-btn:hover { background-color: #c2410c; }
+        .status-text { color: #34d399; font-size: 15px; font-weight: bold; }
         .video-container {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            align-items: center;
-            margin-top: 20px;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: #1e293b;
+            border-radius: 12px;
+            border: 2px solid #334155;
+            overflow: hidden;
         }
         video {
             width: 100%;
-            max-width: 350px;
-            height: 250px;
-            background: #1e293b;
-            border-radius: 12px;
-            border: 2px solid #38bdf8;
+            height: 100%;
             object-fit: cover;
         }
-        .controls {
-            margin-top: 20px;
+        .label {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #e2e8f0;
+        }
+        #group-videos {
             display: flex;
-            gap: 10px;
-            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            width: 100%;
+            max-width: 400px;
         }
-        button {
-            padding: 12px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
+        .remote-box {
+            position: relative;
+            width: 48%;
+            height: 150px;
+            background: #1e293b;
             border-radius: 8px;
-            cursor: pointer;
+            overflow: hidden;
+            border: 1px solid #475569;
         }
-        #start-btn {
-            background-color: #22c55e;
-            color: white;
-        }
-        #stop-btn {
-            background-color: #ef4444;
-            color: white;
+        .remote-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
 
-    <h1>Sky Global Video Call</h1>
-    <p>Connecting the World, Without Limits</p>
+    <h2>Sky Global Video Call</h2>
 
-    <div class="video-container">
-        <div>
-            <p>Aapka Camera (Local View)</p>
-            <video id="localVideo" autoplay playsinline muted></video>
+    <!-- 1. Welcome Page -->
+    <div class="card" id="welcome-card">
+        <h3>Welcome!</h3>
+        <p style="font-size: 13px; color: #94a3b8; margin-top: 0;">Apna naam aur mobile number darj karein:</p>
+        <input type="text" id="user-name" placeholder="Aapka Naam" style="width: 85%; margin-bottom: 10px;">
+        <br>
+        <div class="input-group" style="width: 85%; margin: 0 auto 10px auto;">
+            <input type="tel" id="user-phone" placeholder="Mobile Number" style="width: 100%; margin-bottom: 0;">
+            <button class="mic-btn" onclick="startVoiceInput('user-phone', event)" title="Bolkar type karein">🎙️</button>
         </div>
+        <br>
+        <button onclick="saveUserProfile()">Save & Start</button>
     </div>
 
-    <div class="controls">
-        <button id="start-btn" onclick="startCamera()">Camera On karo</button>
-        <button id="stop-btn" onclick="stopCamera()">Band karo</button>
+    <!-- 2. Dashboard Page -->
+    <div class="card" id="dashboard-card" style="display: none;">
+        <p style="margin: 0 0 8px 0;">Swagat hai, <span id="profile-name" style="color: #38bdf8; font-weight: bold;"></span>!</p>
+        <p style="margin: 0 0 10px 0;">Aapki ID: <span id="display-my-id" class="status-text"></span></p>
+        
+        <div class="input-group" style="width: 85%; margin: 0 auto 10px auto;">
+            <input type="text" id="partner-phone-input" placeholder="Dost ka Mobile Number" style="width: 100%; margin-bottom: 0;">
+            <button class="mic-btn" onclick="startVoiceInput('partner-phone-input', event)" title="Bolkar number dalein">🎙️</button>
+        </div>
+        <br>
+        <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
+        <button onclick="startGroupCall()" style="background-color: #16a34a;">Group Call Room Banayein</button>
+        <br>
+        <button id="switch-btn" onclick="switchCamera()">Switch Camera</button>
+    </div>
+
+    <!-- 3. Video Area -->
+    <div class="video-container">
+        <div class="video-wrapper">
+            <span class="label">Aapka Camera</span>
+            <video id="local-video" autoplay playsinline muted></video>
+        </div>
+        <div id="group-videos"></div>
     </div>
 
     <script>
-        let localStream = null;
+        const welcomeCard = document.getElementById('welcome-card');
+        const dashboardCard = document.getElementById('dashboard-card');
+        const userNameInput = document.getElementById('user-name');
+        const userPhoneInput = document.getElementById('user-phone');
+        const profileNameSpan = document.getElementById('profile-name');
+        const displayMyId = document.getElementById('display-my-id');
+        const partnerPhoneInput = document.getElementById('partner-phone-input');
+        const localVideo = document.getElementById('local-video');
+        const groupVideos = document.getElementById('group-videos');
+        const switchBtn = document.getElementById('switch-btn');
 
-        async function startCamera() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: true
-                });
+        let peer;
+        let localStream;
+        let currentFacingMode = 'user';
+        let myUniqueId = '';
 
-                const localVideo = document.getElementById('localVideo');
-                localVideo.srcObject = localStream;
-                alert("Camera successfully chalu ho gaya hai!");
-            } catch (error) {
-                console.error("Camera access karne mein error aayi:", error);
-                alert("Camera permission nahi mili ya koi error hai!");
+        window.onload = function() {
+            const savedName = localStorage.getItem('sky_user_name');
+            const savedPhone = localStorage.getItem('sky_user_phone');
+            
+            if (savedName && savedPhone) {
+                userNameInput.value = savedName;
+                userPhoneInput.value = savedPhone;
+                saveUserProfile();
             }
+        };
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true })
+            .then(stream => {
+                localStream = stream;
+                localVideo.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Camera error:", err);
+            });
+
+        // Voice Command (Speech Recognition) Function
+        function startVoiceInput(targetId, event) {
+            const inputField = document.getElementById(targetId);
+            const btn = event.currentTarget;
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Aapka browser voice typing support nahi karta!");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'hi-IN'; // Hindi / English mix numbers ke liye
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            btn.classList.add('listening');
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                let speechText = event.results[0][0].transcript;
+                // Sirf numbers ya text nikalne ke liye spaces hata sakte hain
+                speechText = speechText.replace(/\s+/g, ''); 
+                inputField.value = speechText;
+                btn.classList.remove('listening');
+            };
+
+            recognition.onerror = () => {
+                alert("Awaz sunai nahi di, dobara koshish karein.");
+                btn.classList.remove('listening');
+            };
+
+            recognition.onspeechend = () => {
+                recognition.stop();
+                btn.classList.remove('listening');
+            };
         }
 
-        function stopCamera() {
+        function saveUserProfile() {
+            const name = userNameInput.value.trim();
+            const phone = userPhoneInput.value.trim();
+
+            if (!name || !phone) {
+                alert("Kripya apna naam aur mobile number bharein!");
+                return;
+            }
+
+            localStorage.setItem('sky_user_name', name);
+            localStorage.setItem('sky_user_phone', phone);
+
+            myUniqueId = "sky_" + phone;
+            peer = new Peer(myUniqueId);
+
+            peer.on('open', (id) => {
+                profileNameSpan.innerText = name;
+                displayMyId.innerText = phone;
+                welcomeCard.style.display = 'none';
+                dashboardCard.style.display = 'block';
+
+                if (/Mobi|Android/i.test(navigator.userAgent)) {
+                    switchBtn.style.display = 'inline-block';
+                }
+            });
+
+            peer.on('error', (err) => {
+                if (err.type === 'unavailable-id') {
+                    profileNameSpan.innerText = name;
+                    displayMyId.innerText = phone;
+                    welcomeCard.style.display = 'none';
+                    dashboardCard.style.display = 'block';
+                } else {
+                    alert("Connection error: " + err.type);
+                }
+            });
+
+            peer.on('call', (call) => {
+                call.answer(localStream);
+                call.on('stream', (remoteStream) => {
+                    appendRemoteVideo(call.peer, remoteStream);
+                });
+            });
+        }
+
+        function connectCall() {
+            const partnerPhone = partnerPhoneInput.value.trim();
+            if (!partnerPhone) {
+                alert("Dost ka mobile number daalein!");
+                return;
+            }
+
+            const partnerPeerId = "sky_" + partnerPhone;
+            if (partnerPeerId === myUniqueId) {
+                alert("Khud ko call nahi lag sakti!");
+                return;
+            }
+
+            const call = peer.call(partnerPeerId, localStream);
+            call.on('stream', (remoteStream) => {
+                appendRemoteVideo(partnerPeerId, remoteStream);
+            });
+            alert("Call connect ki ja rahi hai...");
+        }
+
+        function startGroupCall() {
+            const roomName = prompt("Group Call ke liye Room ka naam ya number daalein:");
+            if (!roomName) return;
+
+            const groupPeerId = "sky_group_" + roomName;
+            const call = peer.call(groupPeerId, localStream);
+            call.on('stream', (remoteStream) => {
+                appendRemoteVideo(groupPeerId, remoteStream);
+            });
+            alert("Group Room mein jud gaye hain!");
+        }
+
+        function appendRemoteVideo(id, stream) {
+            let existingBox = document.getElementById('box-' + id);
+            if (existingBox) {
+                existingBox.querySelector('video').srcObject = stream;
+                return;
+            }
+
+            const box = document.createElement('div');
+            box.className = 'remote-box';
+            box.id = 'box-' + id;
+
+            const vid = document.createElement('video');
+            vid.autoplay = true;
+            vid.playsInline = true;
+            vid.srcObject = stream;
+
+            box.appendChild(vid);
+            groupVideos.appendChild(box);
+        }
+
+        function switchCamera() {
+            currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+            
             if (localStream) {
-                let tracks = localStream.getTracks();
-                tracks.forEach(track => track.stop());
-                document.getElementById('localVideo').srcObject = null;
-                alert("Camera band ho gaya hai.");
+                localStream.getTracks().forEach(track => track.stop());
+            }
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true })
+                .then(stream => {
+                    localStream = stream;
+                    localVideo.srcObject = stream;
+                    replaceTrack(stream);
+                })
+                .catch(err => console.error(err));
+        }
+
+        function replaceTrack(newStream) {
+            const videoTrack = newStream.getVideoTracks()[0];
+            if (peer && peer.connections) {
+                Object.keys(peer.connections).forEach(connId => {
+                    peer.connections[connId].forEach(connection => {
+                        if (connection.peerConnection) {
+                            const sender = connection.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                            if (sender) {
+                                sender.replaceTrack(videoTrack);
+                            }
+                        }
+                    });
+                });
             }
         }
     </script>
-
 </body>
 </html>
