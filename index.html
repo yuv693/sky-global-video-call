@@ -164,7 +164,7 @@
         
         <div class="input-group" style="width: 85%; margin: 0 auto 10px auto;">
             <input type="text" id="partner-phone-input" placeholder="Dost ka Mobile Number" style="width: 100%; margin-bottom: 0;">
-            <button class="mic-btn" onclick="startVoiceInput('partner-phone-input', event)" title="Bolkar number dalein">🎙️️</button>
+            <button class="mic-btn" onclick="startVoiceInput('partner-phone-input', event)" title="Bolkar number dalein">🎙</button>
         </div>
         <br>
         <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
@@ -287,12 +287,11 @@
 
             myUniqueId = "sky_" + phone;
 
-            // Connected to Custom Render Signaling Server
+            // Connected to Custom Render Signaling Server (Fixed Configuration)
             peer = new Peer(myUniqueId, {
                 host: 'sky-signaling-server.onrender.com',
-                port: 443,
-                path: '/',
-                secure: true
+                secure: true,
+                path: '/'
             });
 
             peer.on('open', (id) => {
