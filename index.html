@@ -80,7 +80,6 @@
         #switch-btn { background-color: #ea580c; display: none; width: auto; padding: 8px 15px; }
         #switch-btn:hover { background-color: #c2410c; }
         
-        /* End Call Button Styling */
         #end-call-btn { background-color: #dc2626; display: none; }
         #end-call-btn:hover { background-color: #b91c1c; }
 
@@ -213,7 +212,6 @@
             }
         };
 
-        // Low-Bandwidth Optimization
         const lowBandwidthConstraints = {
             video: { 
                 facingMode: currentFacingMode,
@@ -236,7 +234,6 @@
                 console.error("Camera error:", err);
             });
 
-        // Voice Command (Speech Recognition)
         function startVoiceInput(targetId, event) {
             const inputField = document.getElementById(targetId);
             const btn = event.currentTarget;
@@ -287,12 +284,8 @@
 
             myUniqueId = "sky_" + phone;
 
-            // Connected to Custom Render Signaling Server (Fixed Configuration)
-            peer = new Peer(myUniqueId, {
-                host: 'sky-signaling-server.onrender.com',
-                secure: true,
-                path: '/'
-            });
+            // Using stable PeerJS public cloud server to avoid network errors instantly
+            peer = new Peer(myUniqueId);
 
             peer.on('open', (id) => {
                 profileNameSpan.innerText = name;
