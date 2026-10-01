@@ -36,7 +36,7 @@
             gap: 5px;
             margin-bottom: 10px;
         }
-        input {
+        input, select {
             width: 75%;
             padding: 10px;
             border-radius: 6px;
@@ -82,6 +82,10 @@
         
         #end-call-btn { background-color: #dc2626; display: none; }
         #end-call-btn:hover { background-color: #b91c1c; }
+
+        #record-btn { background-color: #7c3aed; display: none; }
+        #record-btn:hover { background-color: #6d28d9; }
+        #record-btn.recording { background-color: #dc2626; animation: pulse 1s infinite; }
 
         .status-text { color: #34d399; font-size: 15px; font-weight: bold; }
         .video-container {
@@ -161,6 +165,25 @@
         <p style="margin: 0 0 8px 0;">Swagat hai, <span id="profile-name" style="color: #38bdf8; font-weight: bold;"></span>!</p>
         <p style="margin: 0 0 10px 0;">Aapki ID: <span id="display-my-id" class="status-text"></span></p>
         
+        <!-- Contact Save Section -->
+        <div style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #334155;">
+            <p style="margin: 0 0 6px 0; font-size: 13px; color: #38bdf8;">Naya Contact Jodein:</p>
+            <input type="text" id="contact-name" placeholder="Dost ka Naam" style="width: 85%; margin-bottom: 6px;">
+            <div class="input-group" style="width: 85%; margin: 0 auto 6px auto;">
+                <input type="tel" id="contact-phone" placeholder="Dost ka Mobile Number" style="width: 100%; margin-bottom: 0;">
+                <button class="mic-btn" onclick="startVoiceInput('contact-phone', event)" title="Bolkar number dalein">🎙</button>
+            </div>
+            <button onclick="saveContact()" style="background-color: #059669; width: 85%; font-size: 13px; padding: 8px;">Contact Save Karein</button>
+            <button onclick="downloadContactsBackup()" style="background-color: #475569; width: 85%; font-size: 12px; padding: 6px; margin-top: 6px;">📥 Contacts Download (Backup)</button>
+        </div>
+
+        <!-- Saved Contacts Dropdown -->
+        <div style="margin-bottom: 10px;">
+            <select id="saved-contacts-dropdown" onchange="selectContact(this)">
+                <option value="">-- Saved Contacts Se Chunein --</option>
+            </select>
+        </div>
+
         <div class="input-group" style="width: 85%; margin: 0 auto 10px auto;">
             <input type="text" id="partner-phone-input" placeholder="Dost ka Mobile Number" style="width: 100%; margin-bottom: 0;">
             <button class="mic-btn" onclick="startVoiceInput('partner-phone-input', event)" title="Bolkar number dalein">🎙</button>
@@ -168,6 +191,7 @@
         <br>
         <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
         <button onclick="startGroupCall()" style="background-color: #16a34a;">Group Call Room Banayein</button>
+        <button id="record-btn" onclick="toggleRecording()">🔴 Record Call (Start)</button>
         <button id="end-call-btn" onclick="endCall()">Call Kaatein (End Call)</button>
         <br>
         <button id="switch-btn" onclick="switchCamera()">Switch Camera</button>
@@ -190,16 +214,23 @@
         const profileNameSpan = document.getElementById('profile-name');
         const displayMyId = document.getElementById('display-my-id');
         const partnerPhoneInput = document.getElementById('partner-phone-input');
+        const contactNameInput = document.getElementById('contact-name');
+        const contactPhoneInput = document.getElementById('contact-phone');
+        const savedContactsDropdown = document.getElementById('saved-contacts-dropdown');
         const localVideo = document.getElementById('local-video');
         const groupVideos = document.getElementById('group-videos');
         const switchBtn = document.getElementById('switch-btn');
         const endCallBtn = document.getElementById('end-call-btn');
+        const recordBtn = document.getElementById('record-btn');
 
         let peer;
         let localStream;
         let currentCall = null;
         let currentFacingMode = 'user';
         let myUniqueId = '';
+        
+        let mediaRecorder;
+        let recordedChunks = [];
 
         window.onload = function() {
             const savedName = localStorage.getItem('sky_user_name');
@@ -210,6 +241,7 @@
                 userPhoneInput.value = savedPhone;
                 saveUserProfile();
             }
+            loadContacts();
         };
 
         const lowBandwidthConstraints = {
@@ -284,7 +316,6 @@
 
             myUniqueId = "sky_" + phone;
 
-            // Using stable PeerJS public cloud server to avoid network errors instantly
             peer = new Peer(myUniqueId);
 
             peer.on('open', (id) => {
@@ -315,6 +346,7 @@
                 call.on('stream', (remoteStream) => {
                     appendRemoteVideo(call.peer, remoteStream);
                     endCallBtn.style.display = 'inline-block';
+                    recordBtn.style.display = 'inline-block';
                 });
                 call.on('close', () => {
                     resetCallUI();
@@ -322,10 +354,121 @@
             });
         }
 
+        // Contact Management & Download Backup
+        function saveContact() {
+            const name = contactNameInput.value.trim();
+            const phone = contactPhoneInput.value.trim();
+
+            if (!name || !phone) {
+                alert("Kripya contact ka naam aur number dono bharein!");
+                return;
+            }
+
+            let contacts = JSON.parse(localStorage.getItem('sky_saved_contacts') || '[]');
+            contacts.push({ name, phone });
+            localStorage.setItem('sky_saved_contacts', JSON.stringify(contacts));
+
+            contactNameInput.value = '';
+            contactPhoneInput.value = '';
+            loadContacts();
+            alert("Contact successfully save ho gaya!");
+        }
+
+        function loadContacts() {
+            let contacts = JSON.parse(localStorage.getItem('sky_saved_contacts') || '[]');
+            savedContactsDropdown.innerHTML = '<option value="">-- Saved Contacts Se Chunein --</option>';
+            contacts.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c.phone;
+                opt.textContent = c.name + " (" + c.phone + ")";
+                savedContactsDropdown.appendChild(opt);
+            });
+        }
+
+        function selectContact(selectObj) {
+            if (selectObj.value) {
+                partnerPhoneInput.value = selectObj.value;
+            }
+        }
+
+        function downloadContactsBackup() {
+            let contacts = localStorage.getItem('sky_saved_contacts') || '[]';
+            let blob = new Blob([contacts], { type: 'application/json' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'sky_contacts_backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Call Recording & Download Feature
+        function toggleRecording() {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        function startRecording() {
+            recordedChunks = [];
+            if (!localStream) {
+                alert("Recording ke liye camera stream available nahi hai!");
+                return;
+            }
+
+            try {
+                mediaRecorder = new MediaRecorder(localStream, { mimeType: 'video/webm;codecs=vp8,opus' });
+            } catch (e) {
+                try {
+                    mediaRecorder = new MediaRecorder(localStream);
+                } catch (err) {
+                    alert("Aapka browser video recording support nahi karta!");
+                    return;
+                }
+            }
+
+            mediaRecorder.ondataavailable = function(event) {
+                if (event.data && event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = function() {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'sky-call-recording-' + Date.now() + '.webm';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                alert("Call recording download ho gayi hai!");
+            };
+
+            mediaRecorder.start();
+            recordBtn.innerText = "⏹️ Stop & Download Recording";
+            recordBtn.classList.add('recording');
+            alert("Recording shuru ho chuki hai...");
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+                recordBtn.innerText = "🔴 Record Call (Start)";
+                recordBtn.classList.remove('recording');
+            }
+        }
+
         function connectCall() {
             const partnerPhone = partnerPhoneInput.value.trim();
             if (!partnerPhone) {
-                alert("Dost ka mobile number daalein!");
+                alert("Dost ka mobile number daalein ya select karein!");
                 return;
             }
 
@@ -341,6 +484,7 @@
             call.on('stream', (remoteStream) => {
                 appendRemoteVideo(partnerPeerId, remoteStream);
                 endCallBtn.style.display = 'inline-block';
+                recordBtn.style.display = 'inline-block';
             });
             call.on('close', () => {
                 resetCallUI();
@@ -359,6 +503,7 @@
             call.on('stream', (remoteStream) => {
                 appendRemoteVideo(groupPeerId, remoteStream);
                 endCallBtn.style.display = 'inline-block';
+                recordBtn.style.display = 'inline-block';
             });
             call.on('close', () => {
                 resetCallUI();
@@ -367,6 +512,9 @@
         }
 
         function endCall() {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                stopRecording();
+            }
             if (currentCall) {
                 currentCall.close();
             }
@@ -377,6 +525,7 @@
         function resetCallUI() {
             groupVideos.innerHTML = '';
             endCallBtn.style.display = 'none';
+            recordBtn.style.display = 'none';
             currentCall = null;
         }
 
