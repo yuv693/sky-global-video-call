@@ -96,11 +96,6 @@
             box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
         }
         button:hover { background: #0369a1; }
-        #switch-btn { background-color: #ea580c; display: none; width: auto; padding: 8px 15px; }
-        #end-call-btn { background-color: #dc2626; display: none; }
-        #record-btn { background-color: #7c3aed; display: none; }
-        #record-btn.recording { background-color: #dc2626; animation: pulse 1s infinite; }
-
         .status-text { color: #34d399; font-size: 15px; font-weight: bold; }
         .sat-badge {
             background: rgba(14, 165, 233, 0.15);
@@ -113,7 +108,7 @@
             text-align: left;
         }
 
-        /* --- WhatsApp Style Full Screen Calling UI --- */
+        /* --- WhatsApp Style Full Screen Calling UI (Exact Match) --- */
         #call-screen {
             display: none;
             position: fixed;
@@ -121,11 +116,10 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: #111;
+            background: #0b141a;
             z-index: 9999;
             overflow: hidden;
         }
-        /* Samne wale ka video poori screen par background ban jayega */
         #remote-video-fullscreen {
             position: absolute;
             top: 0;
@@ -135,42 +129,33 @@
             object-fit: cover;
             z-index: 1;
         }
-        /* Aapka khud ka camera chote box mein upar/side mein ya background ke roop mein toggle hoga */
-        .local-video-pip {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 1;
-        }
 
-        /* Upar ki taraf Caller Info (Name & Calling status) */
+        /* Top Caller Info (Name & Calling status) jaise screenshot mein hai[span_2](start_span)[span_2](end_span) */
         .call-header-info {
             position: absolute;
-            top: 40px;
+            top: 50px;
             left: 0;
             width: 100%;
             text-align: center;
             z-index: 10;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            text-shadow: 0 2px 6px rgba(0,0,0,0.8);
         }
         .call-header-info h3 {
             margin: 0;
-            font-size: 22px;
+            font-size: 24px;
             color: #ffffff;
+            font-weight: 500;
         }
         .call-header-info p {
-            margin: 4px 0 0 0;
-            font-size: 14px;
+            margin: 6px 0 0 0;
+            font-size: 15px;
             color: #cbd5e1;
         }
 
-        /* Right Side Floating Action Buttons (Jaise Screenshot mein hain) */
+        /* Right Side Round Floating Buttons (Screenshot ke mutabiq)[span_3](start_span)[span_3](end_span) */
         .right-action-buttons {
             position: absolute;
-            top: 120px;
+            top: 130px;
             right: 20px;
             display: flex;
             flex-direction: column;
@@ -178,51 +163,51 @@
             z-index: 10;
         }
         .round-icon-btn {
-            width: 48px;
-            height: 48px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(26, 38, 57, 0.75);
+            border: 1px solid rgba(255,255,255,0.15);
             color: white;
-            font-size: 18px;
+            font-size: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             margin: 0;
-            width: 48px !important;
+            padding: 0;
         }
         .round-icon-btn:active {
             transform: scale(0.95);
         }
 
-        /* Neeche ka WhatsApp Style Floating Control Panel */
+        /* Bottom Floating WhatsApp Control Panel (Screenshot ke mutabiq)[span_4](start_span)[span_4](end_span) */
         .whatsapp-bottom-panel {
             position: absolute;
-            bottom: 30px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(20, 24, 33, 0.85);
-            backdrop-filter: blur(12px);
+            background: rgba(22, 27, 34, 0.9);
+            backdrop-filter: blur(15px);
             border: 1px solid rgba(255,255,255,0.1);
-            padding: 10px 15px;
-            border-radius: 40px;
+            padding: 12px 18px;
+            border-radius: 50px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             z-index: 10;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.6);
         }
         .bottom-control-btn {
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             border: none;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
             color: white;
-            font-size: 16px;
+            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -270,27 +255,6 @@
             border-radius: 4px;
             font-size: 11px;
             color: #e2e8f0;
-        }
-        #group-videos {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            width: 100%;
-            max-width: 400px;
-        }
-        .remote-box {
-            position: relative;
-            width: 48%;
-            height: 150px;
-            background: #1e293b;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #475569;
-        }
-        .remote-box video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
     </style>
 </head>
@@ -345,10 +309,6 @@
         <br>
         <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
         <button onclick="startGroupCall()" style="background-color: #16a34a;">Group Travel Room Banayein</button>
-        <button id="record-btn" onclick="toggleRecording()">🔴 Record Call (Start)</button>
-        <button id="end-call-btn" onclick="endCall()">Call Kaatein (End Call)</button>
-        <br>
-        <button id="switch-btn" onclick="switchCamera()">Switch Camera</button>
     </div>
 
     <!-- 3. Normal Home Video Preview -->
@@ -357,31 +317,30 @@
             <span class="label">Aapka Camera</span>
             <video id="local-video" autoplay playsinline muted></video>
         </div>
-        <div id="group-videos"></div>
     </div>
 
-    <!-- WhatsApp Style Full Screen Calling Interface -->
+    <!-- WhatsApp Style Full Screen Calling Interface (Direct Active on Call) -->
     <div id="call-screen">
-        <!-- Background mein Remote Video ya Local Video (agar akela hai) -->
+        <!-- Background Video (Remote ya agar akela ho toh Local Preview) -->
         <video id="remote-video-fullscreen" autoplay playsinline></video>
 
-        <!-- Upar Caller ki Detail -->
+        <!-- Top Caller Info (Name & Status)[span_5](start_span)[span_5](end_span) -->
         <div class="call-header-info">
-            <h3 id="active-caller-name">Sky Traveler</h3>
+            <h3 id="active-caller-name">Sahil Chauhan</h3>
             <p id="active-call-status">Calling...</p>
         </div>
 
-        <!-- Right Side Action Buttons (Add member, Switch camera, Effects) -->
+        <!-- Right Side Action Buttons[span_6](start_span)[span_6](end_span) -->
         <div class="right-action-buttons">
             <button class="round-icon-btn" onclick="startGroupCall()" title="Add Member">👤+</button>
             <button class="round-icon-btn" onclick="switchCamera()" title="Switch Camera">📷</button>
-            <button class="round-icon-btn" onclick="toggleRecording()" title="Record Effects">✨</button>
+            <button class="round-icon-btn" onclick="toggleEffects()" title="Effects">✨</button>
         </div>
 
-        <!-- Neeche WhatsApp Style Control Panel (Menu, Video Toggle, Speaker/Audio, Mute, End Call) -->
+        <!-- Bottom WhatsApp Style Control Panel[span_7](start_span)[span_7](end_span) -->
         <div class="whatsapp-bottom-panel">
-            <button class="bottom-control-btn" onclick="toggleMenuOptions()" title="More Options">⋯</button>
-            <button class="bottom-control-btn" id="toggle-vid-btn" onclick="toggleMyVideo()" title="Video On/Off">📹</button>
+            <button class="bottom-control-btn" onclick="toggleMenuOptions()" title="Menu">⋯</button>
+            <button class="bottom-control-btn" id="toggle-vid-btn" onclick="toggleMyVideo()" title="Video Toggle">📹</button>
             <button class="bottom-control-btn" id="speaker-btn" onclick="toggleSpeaker()" title="Speaker">🔊</button>
             <button class="bottom-control-btn" id="mic-mute-btn" onclick="toggleMic()" title="Mute Mic">🎤</button>
             <button class="bottom-control-btn end-call" onclick="endCall()" title="End Call">📞</button>
@@ -405,10 +364,6 @@
         const mainSubtext = document.getElementById('main-subtext');
         const activeCallerName = document.getElementById('active-caller-name');
         const activeCallStatus = document.getElementById('active-call-status');
-        const groupVideos = document.getElementById('group-videos');
-        const switchBtn = document.getElementById('switch-btn');
-        const endCallBtn = document.getElementById('end-call-btn');
-        const recordBtn = document.getElementById('record-btn');
         const netStatus = document.getElementById('net-status');
 
         let peer;
@@ -416,14 +371,10 @@
         let currentCall = null;
         let currentFacingMode = 'user';
         let myUniqueId = '';
-        
-        let mediaRecorder;
-        let recordedChunks = [];
 
         window.onload = function() {
             const savedName = localStorage.getItem('sky_user_name');
             const savedPhone = localStorage.getItem('sky_user_phone');
-            
             if (savedName && savedPhone) {
                 userNameInput.value = savedName;
                 userPhoneInput.value = savedPhone;
@@ -431,8 +382,6 @@
             }
             loadContacts();
             checkNetworkStatus();
-            window.addEventListener('online', checkNetworkStatus);
-            window.addEventListener('offline', checkNetworkStatus);
         };
 
         function checkNetworkStatus() {
@@ -445,76 +394,43 @@
             }
         }
 
-        const lowBandwidthConstraints = {
-            video: { 
-                facingMode: currentFacingMode,
-                width: { ideal: 320 },
-                height: { ideal: 240 },
-                frameRate: { max: 15 }
-            },
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true
-            }
-        };
-
-        navigator.mediaDevices.getUserMedia(lowBandwidthConstraints)
-            .then(stream => {
-                localStream = stream;
-                localVideo.srcObject = stream;
-            })
-            .catch(err => {
-                console.error("Camera error:", err);
-            });
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode, width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { max: 15 } },
+            audio: { echoCancellation: true, noiseSuppression: true }
+        })
+        .then(stream => {
+            localStream = stream;
+            localVideo.srcObject = stream;
+        })
+        .catch(err => console.error("Camera error:", err));
 
         async function pickContactFromPhone() {
             if ('contacts' in navigator && ('ContactsManager' in window || navigator.contacts.select)) {
                 try {
-                    const props = ['name', 'tel'];
-                    const opts = { multiple: false };
-                    const contacts = await navigator.contacts.select(props, opts);
+                    const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
                     if (contacts && contacts.length > 0) {
-                        const contact = contacts[0];
-                        const name = contact.name ? contact.name[0] : "Unknown";
-                        let phone = contact.tel ? contact.tel[0] : "";
-                        phone = phone.replace(/\D/g, ''); 
+                        let phone = contacts[0].tel ? contacts[0].tel[0].replace(/\D/g, '') : "";
                         if (phone.length > 10) phone = phone.slice(-10);
-                        
                         if (phone) {
                             partnerPhoneInput.value = phone;
-                            let savedContacts = JSON.parse(localStorage.getItem('sky_saved_contacts') || '[]');
-                            if (!savedContacts.some(c => c.phone === phone)) {
-                                savedContacts.push({ name, phone });
-                                localStorage.setItem('sky_saved_contacts', JSON.stringify(savedContacts));
-                                loadContacts();
-                            }
-                            alert("Contact chuna gaya: " + name);
+                            alert("Contact chuna gaya!");
                         }
                     }
-                } catch (ex) {
-                    alert("Contact select karne mein cancel ho gaya.");
-                }
-            } else {
-                alert("Aapka browser contact picker support nahi karta.");
-            }
+                } catch (ex) { alert("Contact select nahi hua."); }
+            } else { alert("Browser contact picker support nahi karta."); }
         }
 
         function startVoiceInput(targetId, event) {
             const inputField = document.getElementById(targetId);
             const btn = event.currentTarget;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Voice typing supported nahi hai!");
-                return;
-            }
+            if (!SpeechRecognition) { alert("Voice typing supported nahi hai!"); return; }
             const recognition = new SpeechRecognition();
             recognition.lang = 'hi-IN';
             btn.classList.add('listening');
             recognition.start();
-
             recognition.onresult = (event) => {
-                let speechText = event.results[0][0].transcript.replace(/\D/g, '');
-                inputField.value = speechText;
+                inputField.value = event.results[0][0].transcript.replace(/\D/g, '');
                 btn.classList.remove('listening');
             };
             recognition.onerror = () => btn.classList.remove('listening');
@@ -524,10 +440,7 @@
         function saveUserProfile() {
             const name = userNameInput.value.trim();
             const phone = userPhoneInput.value.trim();
-            if (!name || !phone) {
-                alert("Kripya naam aur mobile number bharein!");
-                return;
-            }
+            if (!name || !phone) { alert("Naam aur number bharein!"); return; }
             localStorage.setItem('sky_user_name', name);
             localStorage.setItem('sky_user_phone', phone);
             myUniqueId = "sky_" + phone;
@@ -538,25 +451,27 @@
                 displayMyId.innerText = phone;
                 welcomeCard.style.display = 'none';
                 dashboardCard.style.display = 'block';
-                if (/Mobi|Android/i.test(navigator.userAgent)) switchBtn.style.display = 'inline-block';
             });
 
             peer.on('error', (err) => {
-                if (err.type === 'unavailable-id') {
-                    profileNameSpan.innerText = name;
-                    displayMyId.innerText = phone;
-                    welcomeCard.style.display = 'none';
-                    dashboardCard.style.display = 'block';
-                } else {
-                    alert("Connection error: " + err.type);
-                }
+                profileNameSpan.innerText = name;
+                displayMyId.innerText = phone;
+                welcomeCard.style.display = 'none';
+                dashboardCard.style.display = 'block';
             });
 
             peer.on('call', (call) => {
                 currentCall = call;
                 call.answer(localStream);
+                
+                // Jaise hi call aaye, turant WhatsApp UI khol do
+                activeCallerName.innerText = "Incoming Traveler";
+                activeCallStatus.innerText = "Connected 🟢";
+                openWhatsAppCallUI(localStream); // Pehle apna ya placeholder dikhao jab tak stream na aaye
+
                 call.on('stream', (remoteStream) => {
-                    handleActiveCallStream(remoteStream, call.peer);
+                    remoteVideoFullscreen.srcObject = remoteStream;
+                    activeCallStatus.innerText = "Connected 🟢";
                 });
                 call.on('close', () => resetCallUI());
             });
@@ -577,116 +492,52 @@
             if (selectObj.value) partnerPhoneInput.value = selectObj.value;
         }
 
-        function downloadContactsBackup() {
-            let contacts = localStorage.getItem('sky_saved_contacts') || '[]';
-            let blob = new Blob([contacts], { type: 'application/json' });
-            let url = URL.createObjectURL(blob);
-            let a = document.createElement('a');
-            a.href = url;
-            a.download = 'sky_contacts_backup.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function toggleRecording() {
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                startRecording();
-            } else {
-                stopRecording();
-            }
-        }
-
-        function startRecording() {
-            recordedChunks = [];
-            if (!localStream) {
-                alert("Camera stream available nahi hai!");
-                return;
-            }
-            try {
-                mediaRecorder = new MediaRecorder(localStream, { mimeType: 'video/webm;codecs=vp8,opus' });
-            } catch (e) {
-                mediaRecorder = new MediaRecorder(localStream);
-            }
-            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'sky-recording-' + Date.now() + '.webm';
-                a.click();
-                alert("Recording download ho gayi!");
-            };
-            mediaRecorder.start();
-            alert("Recording shuru ho gayi hai!");
-        }
-
-        function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
-        }
-
         function connectCall() {
             const partnerPhone = partnerPhoneInput.value.trim();
-            if (!partnerPhone) {
-                alert("Dost ka mobile number daalein!");
-                return;
-            }
+            if (!partnerPhone) { alert("Dost ka number daalein!"); return; }
             const partnerPeerId = "sky_" + partnerPhone;
-            if (partnerPeerId === myUniqueId) {
-                alert("Khud ko call nahi lag sakti!");
-                return;
-            }
-            const call = peer.call(partnerPeerId, localStream);
-            currentCall = call;
-
+            
             activeCallerName.innerText = "Traveler: " + partnerPhone;
             activeCallStatus.innerText = "Calling...";
             
+            // Turant WhatsApp UI open karo calling dikhane ke liye
+            openWhatsAppCallUI(localStream);
+
+            const call = peer.call(partnerPeerId, localStream);
+            currentCall = call;
+
             call.on('stream', (remoteStream) => {
-                handleActiveCallStream(remoteStream, partnerPeerId);
+                remoteVideoFullscreen.srcObject = remoteStream;
+                activeCallStatus.innerText = "Connected 🟢";
             });
             call.on('close', () => resetCallUI());
-            
-            // Screen Switch karo WhatsApp UI par
-            dashboardCard.style.display = 'none';
-            mainHeader.style.display = 'none';
-            mainSubtext.style.display = 'none';
-            normalVideoContainer.style.display = 'none';
-            callScreen.style.display = 'block';
-            endCallBtn.style.display = 'inline-block';
         }
 
         function startGroupCall() {
             const roomName = prompt("Group Room ka naam daalein:");
             if (!roomName) return;
             const groupPeerId = "sky_group_" + roomName;
+            
+            activeCallerName.innerText = "Room: " + roomName;
+            activeCallStatus.innerText = "Connected in Group";
+            openWhatsAppCallUI(localStream);
+
             const call = peer.call(groupPeerId, localStream);
             currentCall = call;
 
-            activeCallerName.innerText = "Room: " + roomName;
-            activeCallStatus.innerText = "Connected in Group";
-
             call.on('stream', (remoteStream) => {
-                handleActiveCallStream(remoteStream, groupPeerId);
+                remoteVideoFullscreen.srcObject = remoteStream;
             });
             call.on('close', () => resetCallUI());
+        }
 
-            dashboardCard.style.display = 'none';
-            mainHeader.style.display = 'none';
-            mainSubtext.style.display = 'none';
-            normalVideoContainer.style.display = 'none';
+        function openWhatsAppCallUI(stream) {
+            remoteVideoFullscreen.srcObject = stream; // Jab tak samne wala na aaye, khud ka stream dikhega calling status ke sath
             callScreen.style.display = 'block';
         }
 
-        function handleActiveCallStream(stream, peerId) {
-            remoteVideoFullscreen.srcObject = stream;
-            activeCallStatus.innerText = "Connected 🟢";
-        }
-
-        /* WhatsApp Control Panel Functions */
-        function toggleMenuOptions() {
-            alert("Menu options: Satellite link active, Low bandwidth optimization on.");
-        }
+        function toggleMenuOptions() { alert("Satellite D2C Optimized Mode Active."); }
+        function toggleEffects() { alert("Effects menu ready."); }
 
         function toggleMyVideo() {
             if (localStream) {
@@ -697,7 +548,7 @@
         }
 
         function toggleSpeaker() {
-            alert("Audio output switched to speaker/earpiece.");
+            alert("Speaker toggled.");
             document.getElementById('speaker-btn').classList.toggle('active-state');
         }
 
@@ -710,21 +561,12 @@
         }
 
         function endCall() {
-            if (mediaRecorder && mediaRecorder.state !== "inactive") stopRecording();
             if (currentCall) currentCall.close();
             resetCallUI();
-            alert("Call kaat di gayi hai.");
         }
 
         function resetCallUI() {
             callScreen.style.display = 'none';
-            mainHeader.style.display = 'flex';
-            mainSubtext.style.display = 'block';
-            dashboardCard.style.display = 'block';
-            normalVideoContainer.style.display = 'flex';
-            groupVideos.innerHTML = '';
-            endCallBtn.style.display = 'none';
-            recordBtn.style.display = 'none';
             currentCall = null;
         }
 
@@ -737,23 +579,8 @@
                 audio: true
             }).then(stream => {
                 localStream = stream;
-                localVideo.srcObject = stream;
-                replaceTrack(stream);
+                remoteVideoFullscreen.srcObject = stream;
             }).catch(err => console.error(err));
-        }
-
-        function replaceTrack(newStream) {
-            const videoTrack = newStream.getVideoTracks()[0];
-            if (peer && peer.connections) {
-                Object.keys(peer.connections).forEach(connId => {
-                    peer.connections[connId].forEach(connection => {
-                        if (connection.peerConnection) {
-                            const sender = connection.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-                            if (sender) sender.replaceTrack(videoTrack);
-                        }
-                    });
-                });
-            }
         }
     </script>
 </body>
