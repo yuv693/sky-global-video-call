@@ -63,7 +63,7 @@
             font-size: 15px;
             box-sizing: border-box;
         }
-        .mic-btn, .phonebook-btn {
+        .mic-btn {
             background: #475569;
             color: white;
             border: none;
@@ -72,7 +72,6 @@
             cursor: pointer;
             font-size: 16px;
         }
-        .phonebook-btn { background-color: #059669; }
         .mic-btn.listening {
             background: #dc2626;
             animation: pulse 1s infinite;
@@ -330,12 +329,6 @@
             🛰️ <b>D2C Satellite Link:</b> <span id="net-status">Online / Low-Bandwidth Mode</span>
         </div>
 
-        <div style="margin-bottom: 10px;">
-            <select id="saved-contacts-dropdown" onchange="selectContact(this)">
-                <option value="">-- Saved Travelers --</option>
-            </select>
-        </div>
-
         <div class="input-group" style="width: 85%; margin: 0 auto 10px auto;">
             <input type="text" id="partner-phone-input" placeholder="Dost ka Mobile Number" style="width: 100%; margin-bottom: 0;">
             <button class="mic-btn" onclick="startVoiceInput('partner-phone-input', event)">🎙</button>
@@ -355,7 +348,7 @@
     <!-- Incoming Call Ringing Popup (WhatsApp Style) -->
     <div id="incoming-modal">
         <div>
-            <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">WHATSAPP / SKY VIDEO CALL</p>
+            <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">SKY VIDEO CALL</p>
             <h2 id="incoming-caller-name" style="font-size: 26px; color: white; margin: 0;">Traveler</h2>
             <p style="color: #94a3b8; font-size: 14px;">Incoming Video Call...</p>
         </div>
@@ -372,7 +365,7 @@
 
         <div class="call-header-info">
             <h3 id="active-caller-name">Traveler</h3>
-            <p id="active-call-status">Connected 🟢</p>
+            <p id="active-call-status">Connecting...</p>
         </div>
 
         <div class="right-action-buttons">
@@ -401,7 +394,7 @@
         const incomingModal = document.getElementById('incoming-modal');
         const incomingCallerName = document.getElementById('incoming-caller-name');
         const activeCallerName = document.getElementById('active-caller-name');
-        const netStatus = document.getElementById('net-status');
+        const activeCallStatus = document.getElementById('active-call-status');
 
         let peer;
         let localStream;
@@ -418,17 +411,20 @@
                 userPhoneInput.value = savedPhone;
                 saveUserProfile();
             }
+            initCamera();
         };
 
-        navigator.mediaDevices.getUserMedia({
-            video: { facingMode: currentFacingMode, width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { max: 15 } },
-            audio: { echoCancellation: true, noiseSuppression: true }
-        })
-        .then(stream => {
-            localStream = stream;
-            localVideo.srcObject = stream;
-        })
-        .catch(err => console.error("Camera error:", err));
+        function initCamera() {
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: currentFacingMode, width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { max: 15 } },
+                audio: { echoCancellation: true, noiseSuppression: true }
+            })
+            .then(stream => {
+                localStream = stream;
+                localVideo.srcObject = stream;
+            })
+            .catch(err => console.error("Camera error:", err));
+        }
 
         function saveUserProfile() {
             const name = userNameInput.value.trim();
@@ -437,6 +433,8 @@
             localStorage.setItem('sky_user_name', name);
             localStorage.setItem('sky_user_phone', phone);
             myUniqueId = "sky_" + phone;
+            
+            if (peer) peer.destroy();
             peer = new Peer(myUniqueId);
 
             peer.on('open', (id) => {
@@ -453,33 +451,33 @@
                 dashboardCard.style.display = 'block';
             });
 
-            // Jab koi call karega, toh WhatsApp jaisa incoming popup aayega
             peer.on('call', (call) => {
                 incomingCallObj = call;
                 let callerNumber = call.peer.replace('sky_', '');
                 incomingCallerName.innerText = "Traveler: " + callerNumber;
-                incomingModal.style.display = 'flex'; // Popup show hoga
+                incomingModal.style.display = 'flex';
             });
         }
 
-        // Jab user Green Button dabayega (Receive karne ke liye)
         function acceptIncomingCall() {
             incomingModal.style.display = 'none';
             if (incomingCallObj) {
                 currentCall = incomingCallObj;
                 currentCall.answer(localStream);
                 
-                activeCallerName.innerText = currentCall.peer.replace('sky_', '');
+                activeCallerName.innerText = "Traveler: " + currentCall.peer.replace('sky_', '');
+                activeCallStatus.innerText = "Connected 🟢";
                 callScreen.style.display = 'block';
 
                 currentCall.on('stream', (remoteStream) => {
                     remoteVideoFullscreen.srcObject = remoteStream;
+                    activeCallStatus.innerText = "Connected 🟢";
                 });
                 currentCall.on('close', () => resetCallUI());
+                currentCall.on('error', () => resetCallUI());
             }
         }
 
-        // Jab user Red Button dabayega (Cut karne ke liye)
         function rejectIncomingCall() {
             incomingModal.style.display = 'none';
             if (incomingCallObj) {
@@ -494,6 +492,7 @@
             const partnerPeerId = "sky_" + partnerPhone;
             
             activeCallerName.innerText = "Traveler: " + partnerPhone;
+            activeCallStatus.innerText = "Calling...";
             callScreen.style.display = 'block';
 
             const call = peer.call(partnerPeerId, localStream);
@@ -501,8 +500,10 @@
 
             call.on('stream', (remoteStream) => {
                 remoteVideoFullscreen.srcObject = remoteStream;
+                activeCallStatus.innerText = "Connected 🟢";
             });
             call.on('close', () => resetCallUI());
+            call.on('error', () => resetCallUI());
         }
 
         function toggleMyVideo() {
@@ -534,13 +535,18 @@
         function resetCallUI() {
             callScreen.style.display = 'none';
             incomingModal.style.display = 'none';
+            if (remoteVideoFullscreen.srcObject) {
+                remoteVideoFullscreen.srcObject = null;
+            }
             currentCall = null;
             incomingCallObj = null;
         }
 
         function switchCamera() {
             currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+            }
 
             navigator.mediaDevices.getUserMedia({
                 video: { facingMode: currentFacingMode, width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { max: 15 } },
@@ -548,13 +554,17 @@
             }).then(stream => {
                 localStream = stream;
                 localVideo.srcObject = stream;
+                if (currentCall && currentCall.peerConnection) {
+                    const sender = currentCall.peerConnection.getSenders().find(s => s.track.kind === stream.getVideoTracks()[0].kind);
+                    if (sender) sender.replaceTrack(stream.getVideoTracks()[0]);
+                }
             }).catch(err => console.error(err));
         }
 
         function startVoiceInput(targetId, event) {
             const inputField = document.getElementById(targetId);
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return;
+            if (!SpeechRecognition) { alert("Voice input supported nahi hai."); return; }
             const recognition = new SpeechRecognition();
             recognition.lang = 'hi-IN';
             recognition.start();
