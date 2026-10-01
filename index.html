@@ -119,6 +119,59 @@
             margin-bottom: 10px;
             text-align: left;
         }
+
+        /* WhatsApp Style Full Screen Call Interface */
+        #call-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #remote-video-fullscreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+        .local-video-pip {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 100px;
+            height: 150px;
+            background: #222;
+            border-radius: 10px;
+            border: 2px solid #fff;
+            object-fit: cover;
+            z-index: 2;
+        }
+        .call-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 3;
+        }
+        .call-controls button {
+            width: auto;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+        }
+
+        /* Normal Video Preview Area */
         .video-container {
             display: flex;
             flex-direction: column;
@@ -175,11 +228,11 @@
 </head>
 <body>
 
-    <div class="app-header">
+    <div class="app-header" id="main-header">
         <span class="logo-icon">🌐</span>
         <h2>Sky Global Video Call</h2>
     </div>
-    <p style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰️ Starlink Direct-to-Cell Ready Architecture</p>
+    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰️️ Starlink Direct-to-Cell Ready Architecture</p>
 
     <!-- 1. Welcome Page -->
     <div class="card" id="welcome-card">
@@ -233,13 +286,24 @@
         <button id="switch-btn" onclick="switchCamera()">Switch Camera</button>
     </div>
 
-    <!-- 3. Video Area -->
-    <div class="video-container">
+    <!-- 3. Normal Home Video Area -->
+    <div class="video-container" id="normal-video-container">
         <div class="video-wrapper">
             <span class="label">Aapka Camera</span>
             <video id="local-video" autoplay playsinline muted></video>
         </div>
         <div id="group-videos"></div>
+    </div>
+
+    <!-- WhatsApp Style Full Screen Call View -->
+    <div id="call-screen">
+        <video id="remote-video-fullscreen" autoplay playsinline></video>
+        <video class="local-video-pip" id="local-video-pip" autoplay playsinline muted></video>
+        <div class="call-controls">
+            <button id="fs-record-btn" onclick="toggleRecording()" style="background-color: #7c3aed;">🔴 Record</button>
+            <button onclick="switchCamera()" style="background-color: #ea580c;">📷 Switch</button>
+            <button onclick="endCall()" style="background-color: #dc2626;">📞 End Call</button>
+        </div>
     </div>
 
     <script>
@@ -252,6 +316,12 @@
         const partnerPhoneInput = document.getElementById('partner-phone-input');
         const savedContactsDropdown = document.getElementById('saved-contacts-dropdown');
         const localVideo = document.getElementById('local-video');
+        const localVideoPip = document.getElementById('local-video-pip');
+        const remoteVideoFullscreen = document.getElementById('remote-video-fullscreen');
+        const callScreen = document.getElementById('call-screen');
+        const normalVideoContainer = document.getElementById('normal-video-container');
+        const mainHeader = document.getElementById('main-header');
+        const mainSubtext = document.getElementById('main-subtext');
         const groupVideos = document.getElementById('group-videos');
         const switchBtn = document.getElementById('switch-btn');
         const endCallBtn = document.getElementById('end-call-btn');
@@ -309,6 +379,7 @@
             .then(stream => {
                 localStream = stream;
                 localVideo.srcObject = stream;
+                localVideoPip.srcObject = stream;
             })
             .catch(err => {
                 console.error("Camera error:", err);
@@ -426,9 +497,7 @@
                 currentCall = call;
                 call.answer(localStream);
                 call.on('stream', (remoteStream) => {
-                    appendRemoteVideo(call.peer, remoteStream);
-                    endCallBtn.style.display = 'inline-block';
-                    recordBtn.style.display = 'inline-block';
+                    handleActiveCallStream(remoteStream);
                 });
                 call.on('close', () => {
                     resetCallUI();
@@ -513,8 +582,9 @@
             };
 
             mediaRecorder.start();
-            recordBtn.innerText = "⏹️ Stop & Download Recording";
+            recordBtn.innerText = "⏹️ Stop Recording";
             recordBtn.classList.add('recording');
+            document.getElementById('fs-record-btn').innerText = "⏹️ Stop";
             alert("Recording shuru ho chuki hai...");
         }
 
@@ -523,6 +593,7 @@
                 mediaRecorder.stop();
                 recordBtn.innerText = "🔴 Record Call (Start)";
                 recordBtn.classList.remove('recording');
+                document.getElementById('fs-record-btn').innerText = "🔴 Record";
             }
         }
 
@@ -543,9 +614,7 @@
             currentCall = call;
 
             call.on('stream', (remoteStream) => {
-                appendRemoteVideo(partnerPeerId, remoteStream);
-                endCallBtn.style.display = 'inline-block';
-                recordBtn.style.display = 'inline-block';
+                handleActiveCallStream(remoteStream);
             });
             call.on('close', () => {
                 resetCallUI();
@@ -562,14 +631,27 @@
             currentCall = call;
 
             call.on('stream', (remoteStream) => {
-                appendRemoteVideo(groupPeerId, remoteStream);
-                endCallBtn.style.display = 'inline-block';
-                recordBtn.style.display = 'inline-block';
+                handleActiveCallStream(remoteStream);
             });
             call.on('close', () => {
                 resetCallUI();
             });
             alert("Group Room mein jud gaye hain!");
+        }
+
+        function handleActiveCallStream(stream) {
+            remoteVideoFullscreen.srcObject = stream;
+            localVideoPip.srcObject = localStream;
+            
+            // Hide dashboard & normal view, show WhatsApp style full screen
+            dashboardCard.style.display = 'none';
+            mainHeader.style.display = 'none';
+            mainSubtext.style.display = 'none';
+            normalVideoContainer.style.display = 'none';
+            callScreen.style.display = 'flex';
+            
+            endCallBtn.style.display = 'inline-block';
+            recordBtn.style.display = 'inline-block';
         }
 
         function endCall() {
@@ -584,30 +666,16 @@
         }
 
         function resetCallUI() {
+            callScreen.style.display = 'none';
+            mainHeader.style.display = 'flex';
+            mainSubtext.style.display = 'block';
+            dashboardCard.style.display = 'block';
+            normalVideoContainer.style.display = 'flex';
+            
             groupVideos.innerHTML = '';
             endCallBtn.style.display = 'none';
             recordBtn.style.display = 'none';
             currentCall = null;
-        }
-
-        function appendRemoteVideo(id, stream) {
-            let existingBox = document.getElementById('box-' + id);
-            if (existingBox) {
-                existingBox.querySelector('video').srcObject = stream;
-                return;
-            }
-
-            const box = document.createElement('div');
-            box.className = 'remote-box';
-            box.id = 'box-' + id;
-
-            const vid = document.createElement('video');
-            vid.autoplay = true;
-            vid.playsInline = true;
-            vid.srcObject = stream;
-
-            box.appendChild(vid);
-            groupVideos.appendChild(box);
         }
 
         function switchCamera() {
@@ -631,6 +699,7 @@
                 .then(stream => {
                     localStream = stream;
                     localVideo.srcObject = stream;
+                    localVideoPip.srcObject = stream;
                     replaceTrack(stream);
                 })
                 .catch(err => console.error(err));
