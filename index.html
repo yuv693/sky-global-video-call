@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sky Voyage Video Call</title>
-    <!-- Favicon Logo (Compass & Globe) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
+    <title>Sky Global Video Call - Satellite Ready</title>
+    <!-- Favicon Logo -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     <!-- PeerJS Library -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
@@ -27,12 +27,12 @@
             margin-bottom: 2px;
         }
         .logo-icon {
-            font-size: 30px;
-            animation: floatLogo 3s ease-in-out infinite;
+            font-size: 28px;
+            animation: rotateLogo 10s linear infinite;
         }
-        @keyframes floatLogo {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+        @keyframes rotateLogo {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
         h2 { color: #38bdf8; margin: 0; text-align: center; }
         .card {
@@ -109,6 +109,16 @@
         #record-btn.recording { background-color: #dc2626; animation: pulse 1s infinite; }
 
         .status-text { color: #34d399; font-size: 15px; font-weight: bold; }
+        .sat-badge {
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px dashed #38bdf8;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #38bdf8;
+            margin-bottom: 10px;
+            text-align: left;
+        }
         .video-container {
             display: flex;
             flex-direction: column;
@@ -166,10 +176,10 @@
 <body>
 
     <div class="app-header">
-        <span class="logo-icon">🧭</span>
-        <h2>Sky Voyage Call</h2>
+        <span class="logo-icon">🌐</span>
+        <h2>Sky Global Video Call</h2>
     </div>
-    <p style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🌍 Travel & Remote Connection App</p>
+    <p style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰️ Starlink Direct-to-Cell Ready Architecture</p>
 
     <!-- 1. Welcome Page -->
     <div class="card" id="welcome-card">
@@ -190,6 +200,12 @@
         <p style="margin: 0 0 8px 0;">Swagat hai, <span id="profile-name" style="color: #38bdf8; font-weight: bold;"></span>!</p>
         <p style="margin: 0 0 10px 0;">Aapki ID: <span id="display-my-id" class="status-text"></span></p>
         
+        <!-- Satellite Status Box -->
+        <div class="sat-badge">
+            🛰️ <b>D2C Satellite Link:</b> <span id="net-status">Online / Low-Bandwidth Mode</span><br>
+            <span style="font-size: 11px; color: #94a3b8;">Optimized for Remote & Deep Sea Travel</span>
+        </div>
+
         <!-- Phone Contacts Import Section -->
         <div style="background: #0f172a; padding: 10px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #334155;">
             <p style="margin: 0 0 6px 0; font-size: 13px; color: #38bdf8;">Travel Contacts:</p>
@@ -240,6 +256,7 @@
         const switchBtn = document.getElementById('switch-btn');
         const endCallBtn = document.getElementById('end-call-btn');
         const recordBtn = document.getElementById('record-btn');
+        const netStatus = document.getElementById('net-status');
 
         let peer;
         let localStream;
@@ -260,7 +277,20 @@
                 saveUserProfile();
             }
             loadContacts();
+            checkNetworkStatus();
+            window.addEventListener('online', checkNetworkStatus);
+            window.addEventListener('offline', checkNetworkStatus);
         };
+
+        function checkNetworkStatus() {
+            if (navigator.onLine) {
+                netStatus.innerText = "Online / Low-Bandwidth Mode";
+                netStatus.style.color = "#34d399";
+            } else {
+                netStatus.innerText = "Offline / Satellite Link Waiting";
+                netStatus.style.color = "#f87171";
+            }
+        }
 
         const lowBandwidthConstraints = {
             video: { 
@@ -472,7 +502,7 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'voyage-call-recording-' + Date.now() + '.webm';
+                a.download = 'sky-call-recording-' + Date.now() + '.webm';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => {
@@ -483,7 +513,7 @@
             };
 
             mediaRecorder.start();
-            recordBtn.innerText = "⏹️️ Stop & Download Recording";
+            recordBtn.innerText = "⏹️ Stop & Download Recording";
             recordBtn.classList.add('recording');
             alert("Recording shuru ho chuki hai...");
         }
@@ -524,7 +554,7 @@
         }
 
         function startGroupCall() {
-            const roomName = prompt("Group Travel ke liye Room ka naam ya number daalein:");
+            const roomName = prompt("Group Room ke liye naam ya number daalein:");
             if (!roomName) return;
 
             const groupPeerId = "sky_group_" + roomName;
