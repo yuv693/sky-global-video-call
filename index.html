@@ -164,7 +164,7 @@
         
         <div class="input-group" style="width: 85%; margin: 0 auto 10px auto;">
             <input type="text" id="partner-phone-input" placeholder="Dost ka Mobile Number" style="width: 100%; margin-bottom: 0;">
-            <button class="mic-btn" onclick="startVoiceInput('partner-phone-input', event)" title="Bolkar number dalein">🎙️</button>
+            <button class="mic-btn" onclick="startVoiceInput('partner-phone-input', event)" title="Bolkar number dalein">🎙️️</button>
         </div>
         <br>
         <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
@@ -198,7 +198,7 @@
 
         let peer;
         let localStream;
-        let currentCall = null; // Active call store karne ke liye
+        let currentCall = null;
         let currentFacingMode = 'user';
         let myUniqueId = '';
 
@@ -213,7 +213,7 @@
             }
         };
 
-        // Low-Bandwidth Optimization: Resolution ko kam (320x240) aur frame rate ko limit kiya hai
+        // Low-Bandwidth Optimization
         const lowBandwidthConstraints = {
             video: { 
                 facingMode: currentFacingMode,
@@ -286,7 +286,14 @@
             localStorage.setItem('sky_user_phone', phone);
 
             myUniqueId = "sky_" + phone;
-            peer = new Peer(myUniqueId);
+
+            // Connected to Custom Render Signaling Server
+            peer = new Peer(myUniqueId, {
+                host: 'sky-signaling-server.onrender.com',
+                port: 443,
+                path: '/',
+                secure: true
+            });
 
             peer.on('open', (id) => {
                 profileNameSpan.innerText = name;
@@ -310,7 +317,6 @@
                 }
             });
 
-            // Jab koi call karega
             peer.on('call', (call) => {
                 currentCall = call;
                 call.answer(localStream);
@@ -368,7 +374,6 @@
             alert("Group Room mein jud gaye hain!");
         }
 
-        // Call Disconnect / End Call Function
         function endCall() {
             if (currentCall) {
                 currentCall.close();
