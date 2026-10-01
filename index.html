@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sky Global Video Call - Satellite Ready</title>
+    <title>Sky Global Video Call - Android App & Push Ready</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
@@ -304,7 +304,7 @@
         <span class="logo-icon">🌐</span>
         <h2>Sky Global Video Call</h2>
     </div>
-    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Starlink Direct-to-Cell Ready Architecture</p>
+    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Android APK & Push Notification Ready</p>
 
     <!-- 1. Welcome Page -->
     <div class="card" id="welcome-card">
@@ -326,7 +326,7 @@
         <p style="margin: 0 0 10px 0;">Aapki ID: <span id="display-my-id" class="status-text"></span></p>
         
         <div class="sat-badge">
-            🛰️ <b>D2C Satellite Link:</b> <span id="net-status">Online / Low-Bandwidth Mode</span>
+            🛰️ <b>Android / Push Link:</b> <span id="net-status">App Ready / Background Service Active</span>
         </div>
 
         <div class="input-group" style="width: 85%; margin: 0 auto 10px auto;">
@@ -348,7 +348,7 @@
     <!-- Incoming Call Ringing Popup (WhatsApp Style) -->
     <div id="incoming-modal">
         <div>
-            <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">SKY VIDEO CALL</p>
+            <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">ANDROID PUSH VIDEO CALL</p>
             <h2 id="incoming-caller-name" style="font-size: 26px; color: white; margin: 0;">Traveler</h2>
             <p style="color: #94a3b8; font-size: 14px;">Incoming Video Call...</p>
         </div>
@@ -412,7 +412,14 @@
                 saveUserProfile();
             }
             initCamera();
+            requestNotificationPermission();
         };
+
+        function requestNotificationPermission() {
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        }
 
         function initCamera() {
             navigator.mediaDevices.getUserMedia({
@@ -456,6 +463,21 @@
                 let callerNumber = call.peer.replace('sky_', '');
                 incomingCallerName.innerText = "Traveler: " + callerNumber;
                 incomingModal.style.display = 'flex';
+
+                // Agar browser notification permission granted hai toh system notification trigger karein
+                if (Notification.permission === "granted") {
+                    try {
+                        const notif = new Notification("Incoming Video Call", {
+                            body: `Traveler ${callerNumber} is calling you...`,
+                            icon: "https://cdn-icons-png.flaticon.com/512/724/724715.png",
+                            requireInteraction: true
+                        });
+                        notif.onclick = function() {
+                            window.focus();
+                            notif.close();
+                        };
+                    } catch(e) { console.log(e); }
+                }
             });
         }
 
