@@ -3,31 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sky Global Video Call</title>
+    <title>Sky Voyage Video Call</title>
+    <!-- Favicon Logo (Compass & Globe) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
     <!-- PeerJS Library -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #0f172a;
+            background: linear-gradient(135deg, #090d16, #1e1b4b);
             color: #ffffff;
             margin: 0;
             padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
-        h2 { color: #38bdf8; margin-bottom: 5px; margin-top: 0; text-align: center; }
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2px;
+        }
+        .logo-icon {
+            font-size: 30px;
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        h2 { color: #38bdf8; margin: 0; text-align: center; }
         .card {
-            background: #1e293b;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 14px;
             width: 100%;
             max-width: 400px;
             box-sizing: border-box;
             margin-bottom: 12px;
             text-align: center;
             border: 1px solid #334155;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
         .input-group {
             display: flex;
@@ -39,7 +58,7 @@
         input, select {
             width: 75%;
             padding: 10px;
-            border-radius: 6px;
+            border-radius: 8px;
             border: 1px solid #475569;
             background: #0f172a;
             color: white;
@@ -51,7 +70,7 @@
             color: white;
             border: none;
             padding: 10px 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
         }
@@ -70,12 +89,13 @@
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 15px;
             cursor: pointer;
             font-weight: bold;
             margin: 4px;
             width: 85%;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
         }
         button:hover { background: #0369a1; }
         #switch-btn { background-color: #ea580c; display: none; width: auto; padding: 8px 15px; }
@@ -145,11 +165,15 @@
 </head>
 <body>
 
-    <h2>Sky Global Video Call</h2>
+    <div class="app-header">
+        <span class="logo-icon">🧭</span>
+        <h2>Sky Voyage Call</h2>
+    </div>
+    <p style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🌍 Travel & Remote Connection App</p>
 
     <!-- 1. Welcome Page -->
     <div class="card" id="welcome-card">
-        <h3>Welcome!</h3>
+        <h3>Welcome Traveler!</h3>
         <p style="font-size: 13px; color: #94a3b8; margin-top: 0;">Apna naam aur mobile number darj karein:</p>
         <input type="text" id="user-name" placeholder="Aapka Naam" style="width: 85%; margin-bottom: 10px;">
         <br>
@@ -167,16 +191,16 @@
         <p style="margin: 0 0 10px 0;">Aapki ID: <span id="display-my-id" class="status-text"></span></p>
         
         <!-- Phone Contacts Import Section -->
-        <div style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #334155;">
-            <p style="margin: 0 0 6px 0; font-size: 13px; color: #38bdf8;">Phone Contact Se Number Lein:</p>
+        <div style="background: #0f172a; padding: 10px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #334155;">
+            <p style="margin: 0 0 6px 0; font-size: 13px; color: #38bdf8;">Travel Contacts:</p>
             <button class="phonebook-btn" onclick="pickContactFromPhone()" style="width: 85%; font-size: 13px; padding: 8px; margin-bottom: 6px;">📇 Phone Contact Choose Karein</button>
-            <button onclick="downloadContactsBackup()" style="background-color: #475569; width: 85%; font-size: 12px; padding: 6px;">📥 App Contacts Backup Download</button>
+            <button onclick="downloadContactsBackup()" style="background-color: #475569; width: 85%; font-size: 12px; padding: 6px;">📥 Contacts Backup Download</button>
         </div>
 
         <!-- Saved Contacts Dropdown -->
         <div style="margin-bottom: 10px;">
             <select id="saved-contacts-dropdown" onchange="selectContact(this)">
-                <option value="">-- App Ke Saved Contacts --</option>
+                <option value="">-- Saved Travelers --</option>
             </select>
         </div>
 
@@ -186,7 +210,7 @@
         </div>
         <br>
         <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
-        <button onclick="startGroupCall()" style="background-color: #16a34a;">Group Call Room Banayein</button>
+        <button onclick="startGroupCall()" style="background-color: #16a34a;">Group Travel Room Banayein</button>
         <button id="record-btn" onclick="toggleRecording()">🔴 Record Call (Start)</button>
         <button id="end-call-btn" onclick="endCall()">Call Kaatein (End Call)</button>
         <br>
@@ -260,14 +284,8 @@
                 console.error("Camera error:", err);
             });
 
-        // Native Phone Contact Picker API (Works on Android Mobile Chrome)
         async function pickContactFromPhone() {
-            if ('contacts' in navigator && 'Connector' in window || window.ContactsManager) {
-                const supportedProps = await navigator.contacts.getProperties();
-                if (!supportedProps.includes('tel')) {
-                    alert("Aapka browser phone numbers access support nahi karta.");
-                    return;
-                }
+            if ('contacts' in navigator && ('ContactsManager' in window || navigator.contacts.select)) {
                 try {
                     const props = ['name', 'tel'];
                     const opts = { multiple: false };
@@ -276,15 +294,13 @@
                         const contact = contacts[0];
                         const name = contact.name ? contact.name[0] : "Unknown";
                         let phone = contact.tel ? contact.tel[0] : "";
-                        // Clean phone number (remove spaces, dashes, country code if needed)
                         phone = phone.replace(/\D/g, ''); 
                         if (phone.length > 10) {
-                            phone = phone.slice(-10); // Last 10 digits
+                            phone = phone.slice(-10);
                         }
                         
                         if (phone) {
                             partnerPhoneInput.value = phone;
-                            // Save to local storage as well
                             let savedContacts = JSON.parse(localStorage.getItem('sky_saved_contacts') || '[]');
                             if (!savedContacts.some(c => c.phone === phone)) {
                                 savedContacts.push({ name, phone });
@@ -298,8 +314,7 @@
                     alert("Contact select karne mein cancel ya error ho gaya.");
                 }
             } else {
-                // Fallback for browsers not supporting Contact Picker API directly
-                alert("Aapka browser direct phone contact picker support nahi karta. Kripya number manual daalein ya voice command use karein.");
+                alert("Aapka browser direct phone contact picker support nahi karta. Kripya number manual daalein.");
             }
         }
 
@@ -323,7 +338,7 @@
 
             recognition.onresult = (event) => {
                 let speechText = event.results[0][0].transcript;
-                speechText = speechText.replace(/\D/g, ''); // Keep only numbers for phone inputs
+                speechText = speechText.replace(/\D/g, ''); 
                 inputField.value = speechText;
                 btn.classList.remove('listening');
             };
@@ -393,7 +408,7 @@
 
         function loadContacts() {
             let contacts = JSON.parse(localStorage.getItem('sky_saved_contacts') || '[]');
-            savedContactsDropdown.innerHTML = '<option value="">-- App Ke Saved Contacts --</option>';
+            savedContactsDropdown.innerHTML = '<option value="">-- Saved Travelers --</option>';
             contacts.forEach(c => {
                 let opt = document.createElement('option');
                 opt.value = c.phone;
@@ -457,7 +472,7 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'sky-call-recording-' + Date.now() + '.webm';
+                a.download = 'voyage-call-recording-' + Date.now() + '.webm';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => {
@@ -468,7 +483,7 @@
             };
 
             mediaRecorder.start();
-            recordBtn.innerText = "⏹️ Stop & Download Recording";
+            recordBtn.innerText = "⏹️️ Stop & Download Recording";
             recordBtn.classList.add('recording');
             alert("Recording shuru ho chuki hai...");
         }
@@ -509,7 +524,7 @@
         }
 
         function startGroupCall() {
-            const roomName = prompt("Group Call ke liye Room ka naam ya number daalein:");
+            const roomName = prompt("Group Travel ke liye Room ka naam ya number daalein:");
             if (!roomName) return;
 
             const groupPeerId = "sky_group_" + roomName;
