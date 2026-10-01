@@ -56,7 +56,7 @@
             font-size: 16px;
         }
         .mic-btn.listening {
-            background: #dc2626; /* Record hote waqt laal rang */
+            background: #dc2626;
             animation: pulse 1s infinite;
         }
         @keyframes pulse {
@@ -79,6 +79,11 @@
         button:hover { background: #0369a1; }
         #switch-btn { background-color: #ea580c; display: none; width: auto; padding: 8px 15px; }
         #switch-btn:hover { background-color: #c2410c; }
+        
+        /* End Call Button Styling */
+        #end-call-btn { background-color: #dc2626; display: none; }
+        #end-call-btn:hover { background-color: #b91c1c; }
+
         .status-text { color: #34d399; font-size: 15px; font-weight: bold; }
         .video-container {
             display: flex;
@@ -164,6 +169,7 @@
         <br>
         <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
         <button onclick="startGroupCall()" style="background-color: #16a34a;">Group Call Room Banayein</button>
+        <button id="end-call-btn" onclick="endCall()">Call Kaatein (End Call)</button>
         <br>
         <button id="switch-btn" onclick="switchCamera()">Switch Camera</button>
     </div>
@@ -188,9 +194,11 @@
         const localVideo = document.getElementById('local-video');
         const groupVideos = document.getElementById('group-videos');
         const switchBtn = document.getElementById('switch-btn');
+        const endCallBtn = document.getElementById('end-call-btn');
 
         let peer;
         let localStream;
+        let currentCall = null; // Active call store karne ke liye
         let currentFacingMode = 'user';
         let myUniqueId = '';
 
@@ -205,7 +213,21 @@
             }
         };
 
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true })
+        // Low-Bandwidth Optimization: Resolution ko kam (320x240) aur frame rate ko limit kiya hai
+        const lowBandwidthConstraints = {
+            video: { 
+                facingMode: currentFacingMode,
+                width: { ideal: 320 },
+                height: { ideal: 240 },
+                frameRate: { max: 15 }
+            },
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true
+            }
+        };
+
+        navigator.mediaDevices.getUserMedia(lowBandwidthConstraints)
             .then(stream => {
                 localStream = stream;
                 localVideo.srcObject = stream;
@@ -214,7 +236,7 @@
                 console.error("Camera error:", err);
             });
 
-        // Voice Command (Speech Recognition) Function
+        // Voice Command (Speech Recognition)
         function startVoiceInput(targetId, event) {
             const inputField = document.getElementById(targetId);
             const btn = event.currentTarget;
@@ -226,7 +248,7 @@
             }
 
             const recognition = new SpeechRecognition();
-            recognition.lang = 'hi-IN'; // Hindi / English mix numbers ke liye
+            recognition.lang = 'hi-IN';
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
 
@@ -235,7 +257,6 @@
 
             recognition.onresult = (event) => {
                 let speechText = event.results[0][0].transcript;
-                // Sirf numbers ya text nikalne ke liye spaces hata sakte hain
                 speechText = speechText.replace(/\s+/g, ''); 
                 inputField.value = speechText;
                 btn.classList.remove('listening');
@@ -289,10 +310,16 @@
                 }
             });
 
+            // Jab koi call karega
             peer.on('call', (call) => {
+                currentCall = call;
                 call.answer(localStream);
                 call.on('stream', (remoteStream) => {
                     appendRemoteVideo(call.peer, remoteStream);
+                    endCallBtn.style.display = 'inline-block';
+                });
+                call.on('close', () => {
+                    resetCallUI();
                 });
             });
         }
@@ -311,8 +338,14 @@
             }
 
             const call = peer.call(partnerPeerId, localStream);
+            currentCall = call;
+
             call.on('stream', (remoteStream) => {
                 appendRemoteVideo(partnerPeerId, remoteStream);
+                endCallBtn.style.display = 'inline-block';
+            });
+            call.on('close', () => {
+                resetCallUI();
             });
             alert("Call connect ki ja rahi hai...");
         }
@@ -323,10 +356,31 @@
 
             const groupPeerId = "sky_group_" + roomName;
             const call = peer.call(groupPeerId, localStream);
+            currentCall = call;
+
             call.on('stream', (remoteStream) => {
                 appendRemoteVideo(groupPeerId, remoteStream);
+                endCallBtn.style.display = 'inline-block';
+            });
+            call.on('close', () => {
+                resetCallUI();
             });
             alert("Group Room mein jud gaye hain!");
+        }
+
+        // Call Disconnect / End Call Function
+        function endCall() {
+            if (currentCall) {
+                currentCall.close();
+            }
+            resetCallUI();
+            alert("Call kaat di gayi hai.");
+        }
+
+        function resetCallUI() {
+            groupVideos.innerHTML = '';
+            endCallBtn.style.display = 'none';
+            currentCall = null;
         }
 
         function appendRemoteVideo(id, stream) {
@@ -356,7 +410,17 @@
                 localStream.getTracks().forEach(track => track.stop());
             }
 
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true })
+            const updatedConstraints = {
+                video: { 
+                    facingMode: currentFacingMode,
+                    width: { ideal: 320 },
+                    height: { ideal: 240 },
+                    frameRate: { max: 15 }
+                },
+                audio: true
+            };
+
+            navigator.mediaDevices.getUserMedia(updatedConstraints)
                 .then(stream => {
                     localStream = stream;
                     localVideo.srcObject = stream;
