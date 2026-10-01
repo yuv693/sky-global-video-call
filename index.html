@@ -46,7 +46,7 @@
             font-size: 15px;
             box-sizing: border-box;
         }
-        .mic-btn {
+        .mic-btn, .phonebook-btn {
             background: #475569;
             color: white;
             border: none;
@@ -55,6 +55,7 @@
             cursor: pointer;
             font-size: 16px;
         }
+        .phonebook-btn { background-color: #059669; }
         .mic-btn.listening {
             background: #dc2626;
             animation: pulse 1s infinite;
@@ -165,22 +166,17 @@
         <p style="margin: 0 0 8px 0;">Swagat hai, <span id="profile-name" style="color: #38bdf8; font-weight: bold;"></span>!</p>
         <p style="margin: 0 0 10px 0;">Aapki ID: <span id="display-my-id" class="status-text"></span></p>
         
-        <!-- Contact Save Section -->
+        <!-- Phone Contacts Import Section -->
         <div style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #334155;">
-            <p style="margin: 0 0 6px 0; font-size: 13px; color: #38bdf8;">Naya Contact Jodein:</p>
-            <input type="text" id="contact-name" placeholder="Dost ka Naam" style="width: 85%; margin-bottom: 6px;">
-            <div class="input-group" style="width: 85%; margin: 0 auto 6px auto;">
-                <input type="tel" id="contact-phone" placeholder="Dost ka Mobile Number" style="width: 100%; margin-bottom: 0;">
-                <button class="mic-btn" onclick="startVoiceInput('contact-phone', event)" title="Bolkar number dalein">🎙</button>
-            </div>
-            <button onclick="saveContact()" style="background-color: #059669; width: 85%; font-size: 13px; padding: 8px;">Contact Save Karein</button>
-            <button onclick="downloadContactsBackup()" style="background-color: #475569; width: 85%; font-size: 12px; padding: 6px; margin-top: 6px;">📥 Contacts Download (Backup)</button>
+            <p style="margin: 0 0 6px 0; font-size: 13px; color: #38bdf8;">Phone Contact Se Number Lein:</p>
+            <button class="phonebook-btn" onclick="pickContactFromPhone()" style="width: 85%; font-size: 13px; padding: 8px; margin-bottom: 6px;">📇 Phone Contact Choose Karein</button>
+            <button onclick="downloadContactsBackup()" style="background-color: #475569; width: 85%; font-size: 12px; padding: 6px;">📥 App Contacts Backup Download</button>
         </div>
 
         <!-- Saved Contacts Dropdown -->
         <div style="margin-bottom: 10px;">
             <select id="saved-contacts-dropdown" onchange="selectContact(this)">
-                <option value="">-- Saved Contacts Se Chunein --</option>
+                <option value="">-- App Ke Saved Contacts --</option>
             </select>
         </div>
 
@@ -214,8 +210,6 @@
         const profileNameSpan = document.getElementById('profile-name');
         const displayMyId = document.getElementById('display-my-id');
         const partnerPhoneInput = document.getElementById('partner-phone-input');
-        const contactNameInput = document.getElementById('contact-name');
-        const contactPhoneInput = document.getElementById('contact-phone');
         const savedContactsDropdown = document.getElementById('saved-contacts-dropdown');
         const localVideo = document.getElementById('local-video');
         const groupVideos = document.getElementById('group-videos');
@@ -266,6 +260,49 @@
                 console.error("Camera error:", err);
             });
 
+        // Native Phone Contact Picker API (Works on Android Mobile Chrome)
+        async function pickContactFromPhone() {
+            if ('contacts' in navigator && 'Connector' in window || window.ContactsManager) {
+                const supportedProps = await navigator.contacts.getProperties();
+                if (!supportedProps.includes('tel')) {
+                    alert("Aapka browser phone numbers access support nahi karta.");
+                    return;
+                }
+                try {
+                    const props = ['name', 'tel'];
+                    const opts = { multiple: false };
+                    const contacts = await navigator.contacts.select(props, opts);
+                    if (contacts && contacts.length > 0) {
+                        const contact = contacts[0];
+                        const name = contact.name ? contact.name[0] : "Unknown";
+                        let phone = contact.tel ? contact.tel[0] : "";
+                        // Clean phone number (remove spaces, dashes, country code if needed)
+                        phone = phone.replace(/\D/g, ''); 
+                        if (phone.length > 10) {
+                            phone = phone.slice(-10); // Last 10 digits
+                        }
+                        
+                        if (phone) {
+                            partnerPhoneInput.value = phone;
+                            // Save to local storage as well
+                            let savedContacts = JSON.parse(localStorage.getItem('sky_saved_contacts') || '[]');
+                            if (!savedContacts.some(c => c.phone === phone)) {
+                                savedContacts.push({ name, phone });
+                                localStorage.setItem('sky_saved_contacts', JSON.stringify(savedContacts));
+                                loadContacts();
+                            }
+                            alert("Contact chuna gaya: " + name);
+                        }
+                    }
+                } catch (ex) {
+                    alert("Contact select karne mein cancel ya error ho gaya.");
+                }
+            } else {
+                // Fallback for browsers not supporting Contact Picker API directly
+                alert("Aapka browser direct phone contact picker support nahi karta. Kripya number manual daalein ya voice command use karein.");
+            }
+        }
+
         function startVoiceInput(targetId, event) {
             const inputField = document.getElementById(targetId);
             const btn = event.currentTarget;
@@ -286,7 +323,7 @@
 
             recognition.onresult = (event) => {
                 let speechText = event.results[0][0].transcript;
-                speechText = speechText.replace(/\s+/g, ''); 
+                speechText = speechText.replace(/\D/g, ''); // Keep only numbers for phone inputs
                 inputField.value = speechText;
                 btn.classList.remove('listening');
             };
@@ -354,29 +391,9 @@
             });
         }
 
-        // Contact Management & Download Backup
-        function saveContact() {
-            const name = contactNameInput.value.trim();
-            const phone = contactPhoneInput.value.trim();
-
-            if (!name || !phone) {
-                alert("Kripya contact ka naam aur number dono bharein!");
-                return;
-            }
-
-            let contacts = JSON.parse(localStorage.getItem('sky_saved_contacts') || '[]');
-            contacts.push({ name, phone });
-            localStorage.setItem('sky_saved_contacts', JSON.stringify(contacts));
-
-            contactNameInput.value = '';
-            contactPhoneInput.value = '';
-            loadContacts();
-            alert("Contact successfully save ho gaya!");
-        }
-
         function loadContacts() {
             let contacts = JSON.parse(localStorage.getItem('sky_saved_contacts') || '[]');
-            savedContactsDropdown.innerHTML = '<option value="">-- Saved Contacts Se Chunein --</option>';
+            savedContactsDropdown.innerHTML = '<option value="">-- App Ke Saved Contacts --</option>';
             contacts.forEach(c => {
                 let opt = document.createElement('option');
                 opt.value = c.phone;
@@ -402,7 +419,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // Call Recording & Download Feature
         function toggleRecording() {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 startRecording();
