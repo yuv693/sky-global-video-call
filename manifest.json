@@ -1,7 +1,6 @@
 {
   "name": "Sky Global Video Call",
-  "short_name": "SkyCall",
-  "description": "Satellite Ready Global Video Call Application",
+  "short_name": "SkyGlobal",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#090d16",
