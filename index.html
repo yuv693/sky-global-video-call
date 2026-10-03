@@ -73,15 +73,6 @@
             cursor: pointer;
             font-size: 16px;
         }
-        .mic-btn.listening {
-            background: #dc2626;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
         button {
             background: #0284c7;
             color: white;
@@ -106,6 +97,85 @@
             color: #38bdf8;
             margin-bottom: 10px;
             text-align: left;
+        }
+
+        /* --- Saved Contacts Grid & Cards with Direct Video Call Logo --- */
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            max-height: 220px;
+            overflow-y: auto;
+            text-align: left;
+            padding-top: 5px;
+        }
+        .contact-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .contact-avatar-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 2px solid #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        .contact-avatar-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .contact-card h4 { margin: 0; font-size: 13px; color: #f8fafc; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .contact-card p { margin: 2px 0 10px 0; font-size: 11px; color: #94a3b8; }
+        
+        /* Direct Video Call Logo Button inside Card */
+        .direct-video-btn {
+            background: #22c55e;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+            transition: 0.2s;
+            margin: 0;
+        }
+        .direct-video-btn:hover { background: #16a34a; transform: scale(1.05); }
+
+        /* Add Contact Form Drawer/Section */
+        .add-contact-box {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px dashed #475569;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            text-align: left;
+        }
+        .add-contact-box input {
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 8px;
+            font-size: 13px;
         }
 
         /* --- WhatsApp Style Full Screen Calling UI --- */
@@ -276,7 +346,7 @@
         .video-wrapper {
             position: relative;
             width: 100%;
-            height: 200px;
+            height: 160px;
             background: #1e293b;
             border-radius: 12px;
             border: 2px solid #334155;
@@ -305,7 +375,7 @@
         <span class="logo-icon">🌐</span>
         <h2>Sky Global Video Call</h2>
     </div>
-    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Android APK & Push Notification Ready</p>
+    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Android APK & Speed Dial Ready</p>
 
     <!-- 1. Welcome Page -->
     <div class="card" id="welcome-card">
@@ -327,17 +397,37 @@
         <p style="margin: 0 0 10px 0;">Aapki ID: <span id="display-my-id" class="status-text"></span></p>
         
         <div class="sat-badge" id="net-badge-box">
-            🛰️ <b>Smart Location Status:</b> <span id="net-status">Checking Location & Wi-Fi Mode...</span>
+            🛰️ <b>Smart Location Status:</b> <span id="net-status">Checking Location...</span>
         </div>
 
-        <div class="input-group" style="width: 85%; margin: 0 auto 10px auto;">
+        <div class="input-group" style="width: 85%; margin: 0 auto 5px auto;">
             <input type="text" id="partner-phone-input" placeholder="Dost ka Mobile Number" style="width: 100%; margin-bottom: 0;">
             <button class="mic-btn" onclick="startVoiceInput('partner-phone-input', event)">🎙</button>
         </div>
-        <br>
         <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
-        <button id="modeToggleBtn" onclick="toggleAudioVideoMode()" style="background: #334155; margin-top: 6px;">Switch to Audio-Only Mode</button>
-        <button onclick="sendWakeUpAlert()" style="background: #047857; margin-top: 6px;">Send Offline Wake-up Ping</button>
+        <button id="modeToggleBtn" onclick="toggleAudioVideoMode()" style="background: #334155; margin-top: 4px;">Switch to Audio-Only Mode</button>
+        <button onclick="sendWakeUpAlert()" style="background: #047857; margin-top: 4px;">Send Offline Wake-up Ping</button>
+
+        <!-- Speed Dial Contacts Section with Save Form & Direct Video Logo -->
+        <div style="margin-top: 15px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <p style="font-size: 12px; color: #94a3b8; margin: 0;"><b>Speed Dial Contacts:</b></p>
+                <button onclick="toggleAddContactForm()" style="width: auto; padding: 3px 10px; font-size: 11px; margin: 0; background: #0284c7;">+ Naya Contact Jodein</button>
+            </div>
+
+            <!-- Manual Contact Saving Form (Hidden by default) -->
+            <div class="add-contact-box" id="add-contact-form" style="display: none;">
+                <input type="text" id="new-contact-name" placeholder="Dost ka Naam (e.g. Rahul)">
+                <input type="tel" id="new-contact-phone" placeholder="Mobile Number">
+                <input type="text" id="new-contact-photo" placeholder="Photo URL ya Emoji (e.g. 👨‍‍💻 ya https://...)">
+                <button onclick="manualSaveContact()" style="width: 100%; margin: 0; background: #22c55e; padding: 8px;">Contact Save Karein</button>
+            </div>
+
+            <!-- Contacts Grid -->
+            <div class="contacts-grid" id="saved-contacts-container">
+                <!-- Dynamic Cards Here -->
+            </div>
+        </div>
     </div>
 
     <!-- 3. Normal Home Video Preview -->
@@ -400,6 +490,8 @@
         const activeCallStatus = document.getElementById('active-call-status');
         const netStatusText = document.getElementById('net-status');
         const netBadgeBox = document.getElementById('net-badge-box');
+        const savedContactsContainer = document.getElementById('saved-contacts-container');
+        const addContactForm = document.getElementById('add-contact-form');
 
         let peer;
         let localStream;
@@ -408,7 +500,7 @@
         let currentFacingMode = 'user';
         let myUniqueId = '';
         let isAudioOnly = false;
-        let currentCountry = 'IN'; // Default India assumption
+        let currentCountry = 'IN';
 
         window.onload = function() {
             const savedName = localStorage.getItem('sky_user_name');
@@ -421,11 +513,9 @@
             detectUserLocation();
             initCamera();
             requestNotificationPermission();
+            renderSavedContacts();
         };
 
-        // ==========================================
-        // SMART GEO-FENCING & LOCATION DETECTION
-        // ==========================================
         async function detectUserLocation() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(async (position) => {
@@ -438,10 +528,9 @@
                         currentCountry = countryCode;
                         handleCountrySwitch(currentCountry);
                     } catch (error) {
-                        console.log("Location fetch error, staying on standard mode.");
+                        console.log("Location fetch error");
                     }
                 }, (error) => {
-                    console.log("Location permission denied or unavailable.");
                     netStatusText.innerText = "India Mode (Standard Network Active)";
                 }, { timeout: 10000 });
             }
@@ -449,14 +538,12 @@
 
         function handleCountrySwitch(country) {
             if (country === "SA" || country !== "IN") {
-                // Out of India (Saudi Arabia / Pilgrim Zone)
-                netStatusText.innerText = "Saudi Arabia/International Detected: Wi-Fi Saver Mode Active 🛰️";
+                netStatusText.innerText = "Saudi Arabia/International: Wi-Fi Saver Mode Active 🛰️";
                 netBadgeBox.style.borderColor = "#22c55e";
                 netBadgeBox.style.background = "rgba(34, 197, 94, 0.15)";
-                // Automatically enforce low-data mode for data protection
                 isAudioOnly = true;
                 updateCallModeUI();
-                initCamera(); // Restart camera with optimized data profile
+                initCamera();
             } else {
                 netStatusText.innerText = "India Mode: Standard High-Performance Network 🟢";
             }
@@ -486,9 +573,10 @@
                 localStream = stream;
                 if (!isAudioOnly && localVideo) {
                     localVideo.srcObject = stream;
+                    localVideo.play().catch(e => console.log(e));
                 }
             })
-            .catch(err => console.error("Camera error:", err));
+            .catch(err => console.log("Camera error:", err));
         }
 
         function toggleAudioVideoMode() {
@@ -506,11 +594,8 @@
 
         function sendWakeUpAlert() {
             const partnerPhone = partnerPhoneInput.value.trim();
-            if (!partnerPhone) {
-                alert("Pehle dost ka mobile number enter karein jise wake-up alert bhejna hai!");
-                return;
-            }
-            alert(`Wake-up Ping / Top-up Alert successfully sent to Traveler (${partnerPhone})! Unhe notification mil jayegi.`);
+            if (!partnerPhone) { alert("Pehle number dalein!"); return; }
+            alert(`Wake-up Ping successfully sent to Traveler (${partnerPhone})!`);
         }
 
         function saveUserProfile() {
@@ -543,21 +628,76 @@
                 let callerNumber = call.peer.replace('sky_', '');
                 incomingCallerName.innerText = "Traveler: " + callerNumber;
                 incomingModal.style.display = 'flex';
-
-                if (Notification.permission === "granted") {
-                    try {
-                        const notif = new Notification("Incoming Video Call", {
-                            body: `Traveler ${callerNumber} is calling you...`,
-                            icon: "https://cdn-icons-png.flaticon.com/512/724/724715.png",
-                            requireInteraction: true
-                        });
-                        notif.onclick = function() {
-                            window.focus();
-                            notif.close();
-                        };
-                    } catch(e) { console.log(e); }
-                }
+                saveContactToHistory(callerNumber, "Traveler " + callerNumber.slice(-4), "👤");
             });
+        }
+
+        function toggleAddContactForm() {
+            if (addContactForm.style.display === 'none') {
+                addContactForm.style.display = 'block';
+            } else {
+                addContactForm.style.display = 'none';
+            }
+        }
+
+        function manualSaveContact() {
+            const name = document.getElementById('new-contact-name').value.trim();
+            const phone = document.getElementById('new-contact-phone').value.trim();
+            let photo = document.getElementById('new-contact-photo').value.trim();
+            
+            if (!name || !phone) { alert("Kripya Naam aur Number dono bharein!"); return; }
+            if (!photo) photo = "👤";
+
+            saveContactToHistory(phone, name, photo);
+            document.getElementById('new-contact-name').value = '';
+            document.getElementById('new-contact-phone').value = '';
+            document.getElementById('new-contact-photo').value = '';
+            addContactForm.style.display = 'none';
+        }
+
+        function saveContactToHistory(phone, name, photo) {
+            let contacts = JSON.parse(localStorage.getItem('sky_contacts') || '[]');
+            let existing = contacts.find(c => c.phone === phone);
+            if (existing) {
+                existing.name = name;
+                existing.photo = photo;
+            } else {
+                contacts.push({ phone: phone, name: name, photo: photo || "👤" });
+            }
+            localStorage.setItem('sky_contacts', JSON.stringify(contacts));
+            renderSavedContacts();
+        }
+
+        function renderSavedContacts() {
+            let contacts = JSON.parse(localStorage.getItem('sky_contacts') || '[]');
+            if (contacts.length === 0) {
+                savedContactsContainer.innerHTML = '<p style="font-size: 11px; color: #64748b; margin: 0; grid-column: span 2;">Abhi koi saved contact nahi hai.</p>';
+                return;
+            }
+            savedContactsContainer.innerHTML = '';
+            contacts.forEach(c => {
+                let avatarHTML = '';
+                if (c.photo && c.photo.startsWith('http')) {
+                    avatarHTML = `<img src="${c.photo}" alt="img">`;
+                } else {
+                    avatarHTML = `<span>${c.photo || c.name.charAt(0).toUpperCase()}</span>`;
+                }
+
+                let card = document.createElement('div');
+                card.className = 'contact-card';
+                card.innerHTML = `
+                    <div class="contact-avatar-box">${avatarHTML}</div>
+                    <h4>${c.name}</h4>
+                    <p>${c.phone}</p>
+                    <button class="direct-video-btn" onclick="callContact('${c.phone}')" title="Direct Video Call">📹</button>
+                `;
+                savedContactsContainer.appendChild(card);
+            });
+        }
+
+        function callContact(phone) {
+            partnerPhoneInput.value = phone;
+            connectCall();
         }
 
         function acceptIncomingCall() {
@@ -565,7 +705,6 @@
             if (incomingCallObj) {
                 currentCall = incomingCallObj;
                 currentCall.answer(localStream);
-                
                 activeCallerName.innerText = "Traveler: " + currentCall.peer.replace('sky_', '');
                 activeCallStatus.innerText = "Connected 🟢";
                 callScreen.style.display = 'block';
@@ -592,6 +731,8 @@
             if (!partnerPhone) { alert("Dost ka number daalein!"); return; }
             const partnerPeerId = "sky_" + partnerPhone;
             
+            saveContactToHistory(partnerPhone, "Traveler " + partnerPhone.slice(-4), "👤");
+
             activeCallerName.innerText = "Traveler: " + partnerPhone;
             activeCallStatus.innerText = "Calling...";
             callScreen.style.display = 'block';
@@ -612,13 +753,10 @@
                 const videoTrack = localStream.getVideoTracks()[0];
                 videoTrack.enabled = !videoTrack.enabled;
                 document.getElementById('toggle-vid-btn').classList.toggle('active-state');
-            } else {
-                alert("Aap abhi audio-only mode mein hain!");
             }
         }
 
         function toggleSpeaker() {
-            alert("Speaker toggled.");
             document.getElementById('speaker-btn').classList.toggle('active-state');
         }
 
