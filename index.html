@@ -128,39 +128,70 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .contact-avatar-box {
-            width: 56px;
-            height: 56px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: #1e293b;
             border: 2px solid #38bdf8;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             overflow: hidden;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .contact-avatar-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+        
+        /* Online / Offline Status Badge Style */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-bottom: 4px;
+        }
+        .status-dot-online {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+        .status-dot-offline {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-green { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+        .dot-red { background: #ef4444; }
+
         .contact-card h4 { margin: 0; font-size: 13px; color: #f8fafc; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .contact-card p { margin: 2px 0 10px 0; font-size: 11px; color: #94a3b8; }
+        .contact-card p { margin: 2px 0 8px 0; font-size: 11px; color: #94a3b8; }
         
         .direct-video-btn {
             background: #22c55e;
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
             transition: 0.2s;
             margin: 0;
         }
@@ -378,7 +409,7 @@
         <span class="logo-icon">🌐</span>
         <h2>Sky Global Video Call</h2>
     </div>
-    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Android APK & Speed Dial Ready</p>
+    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Android APK & Status Ready</p>
 
     <!-- 1. Welcome Page -->
     <div class="card" id="welcome-card">
@@ -422,7 +453,7 @@
             <div class="add-contact-box" id="add-contact-form" style="display: none;">
                 <input type="text" id="new-contact-name" placeholder="Dost ka Naam (e.g. Rahul)">
                 <input type="tel" id="new-contact-phone" placeholder="Mobile Number">
-                <input type="text" id="new-contact-photo" placeholder="Photo URL ya Emoji (e.g. 👨‍💻 ya https://...)">
+                <input type="text" id="new-contact-photo" placeholder="Photo URL ya Emoji (e.g. 👨‍‍‍💻 ya https://...)">
                 <button onclick="manualSaveContact()" style="width: 100%; margin: 0; background: #22c55e; padding: 8px;">Contact Save Karein</button>
             </div>
 
@@ -619,6 +650,7 @@
                 displayMyId.innerText = phone;
                 welcomeCard.style.display = 'none';
                 dashboardCard.style.display = 'block';
+                checkAllContactsStatus();
             });
 
             peer.on('error', (err) => {
@@ -633,7 +665,7 @@
                 let callerNumber = call.peer.replace('sky_', '');
                 incomingCallerName.innerText = "Traveler: " + callerNumber;
                 incomingModal.style.display = 'flex';
-                saveContactToHistory(callerNumber, "Traveler " + callerNumber.slice(-4), "👤");
+                saveContactToHistory(callerNumber, "Traveler " + callerNumber.slice(-4), "👤", true);
             });
         }
 
@@ -649,24 +681,66 @@
             if (!name || !phone) { alert("Kripya Naam aur Number dono bharein!"); return; }
             if (!photo) photo = "👤";
 
-            saveContactToHistory(phone, name, photo);
-            document.getElementById('new-contact-name').value = '';
-            document.getElementById('new-contact-phone').value = '';
-            document.getElementById('new-contact-photo').value = '';
-            addContactForm.style.display = 'none';
+            checkContactOnlineStatus(phone, (isOnline) => {
+                saveContactToHistory(phone, name, photo, isOnline);
+                document.getElementById('new-contact-name').value = '';
+                document.getElementById('new-contact-phone').value = '';
+                document.getElementById('new-contact-photo').value = '';
+                addContactForm.style.display = 'none';
+            });
         }
 
-        function saveContactToHistory(phone, name, photo) {
+        function saveContactToHistory(phone, name, photo, isOnline) {
             let contacts = JSON.parse(localStorage.getItem('sky_contacts') || '[]');
             let existing = contacts.find(c => c.phone === phone);
             if (existing) {
                 existing.name = name;
                 existing.photo = photo;
+                existing.online = isOnline;
             } else {
-                contacts.push({ phone: phone, name: name, photo: photo || "👤" });
+                contacts.push({ phone: phone, name: name, photo: photo || "👤", online: isOnline });
             }
             localStorage.setItem('sky_contacts', JSON.stringify(contacts));
             renderSavedContacts();
+        }
+
+        function checkContactOnlineStatus(phone, callback) {
+            if (!peer || !peer.id) {
+                callback(false);
+                return;
+            }
+            const testConn = peer.connect("sky_" + phone);
+            let answered = false;
+
+            testConn.on('open', () => {
+                answered = true;
+                testConn.close();
+                callback(true);
+            });
+
+            setTimeout(() => {
+                if (!answered) {
+                    try { testConn.close(); } catch(e){}
+                    callback(false);
+                }
+            }, 1500);
+        }
+
+        function checkAllContactsStatus() {
+            let contacts = JSON.parse(localStorage.getItem('sky_contacts') || '[]');
+            if (contacts.length === 0) return;
+
+            let checkedCount = 0;
+            contacts.forEach(c => {
+                checkContactOnlineStatus(c.phone, (isOnline) => {
+                    c.online = isOnline;
+                    checkedCount++;
+                    if (checkedCount === contacts.length) {
+                        localStorage.setItem('sky_contacts', JSON.stringify(contacts));
+                        renderSavedContacts();
+                    }
+                });
+            });
         }
 
         function renderSavedContacts() {
@@ -678,10 +752,17 @@
             savedContactsContainer.innerHTML = '';
             contacts.forEach(c => {
                 let avatarHTML = c.photo && c.photo.startsWith('http') ? `<img src="${c.photo}" alt="img">` : `<span>${c.photo || c.name.charAt(0).toUpperCase()}</span>`;
+                
+                let isOnline = c.online === true;
+                let statusBadgeHTML = isOnline 
+                    ? `<div class="status-badge status-dot-online"><span class="dot dot-green"></span> Online</div>`
+                    : `<div class="status-badge status-dot-offline"><span class="dot dot-red"></span> Offline</div>`;
+
                 let card = document.createElement('div');
                 card.className = 'contact-card';
                 card.innerHTML = `
                     <div class="contact-avatar-box">${avatarHTML}</div>
+                    ${statusBadgeHTML}
                     <h4>${c.name}</h4>
                     <p>${c.phone}</p>
                     <button class="direct-video-btn" onclick="callContact('${c.phone}')" title="Direct Video Call">📹</button>
@@ -727,7 +808,7 @@
             if (!partnerPhone) { alert("Dost ka number daalein!"); return; }
             const partnerPeerId = "sky_" + partnerPhone;
             
-            saveContactToHistory(partnerPhone, "Traveler " + partnerPhone.slice(-4), "👤");
+            saveContactToHistory(partnerPhone, "Traveler " + partnerPhone.slice(-4), "👤", true);
 
             activeCallerName.innerText = "Traveler: " + partnerPhone;
             activeCallStatus.innerText = "Calling...";
@@ -778,6 +859,7 @@
             }
             currentCall = null;
             incomingCallObj = null;
+            checkAllContactsStatus();
         }
 
         function switchCamera() {
