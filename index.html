@@ -419,7 +419,7 @@
             <div class="add-contact-box" id="add-contact-form" style="display: none;">
                 <input type="text" id="new-contact-name" placeholder="Dost ka Naam (e.g. Rahul)">
                 <input type="tel" id="new-contact-phone" placeholder="Mobile Number">
-                <input type="text" id="new-contact-photo" placeholder="Photo URL ya Emoji (e.g. 👨‍‍💻 ya https://...)">
+                <input type="text" id="new-contact-photo" placeholder="Photo URL ya Emoji (e.g. 👨‍💻 ya https://...)">
                 <button onclick="manualSaveContact()" style="width: 100%; margin: 0; background: #22c55e; padding: 8px;">Contact Save Karein</button>
             </div>
 
@@ -513,7 +513,7 @@
             detectUserLocation();
             initCamera();
             requestNotificationPermission();
-            renderSavedContacts();
+            renderSavedContacts(); // Ensure contacts render correctly on load
         };
 
         async function detectUserLocation() {
@@ -711,6 +711,7 @@
 
                 currentCall.on('stream', (remoteStream) => {
                     remoteVideoFullscreen.srcObject = remoteStream;
+                    remoteVideoFullscreen.play().catch(e => console.log(e)); // FIX: Ensure remote stream plays properly
                     activeCallStatus.innerText = "Connected 🟢";
                 });
                 currentCall.on('close', () => resetCallUI());
@@ -742,6 +743,7 @@
 
             call.on('stream', (remoteStream) => {
                 remoteVideoFullscreen.srcObject = remoteStream;
+                remoteVideoFullscreen.play().catch(e => console.log(e)); // FIX: Ensure remote stream plays properly
                 activeCallStatus.innerText = "Connected 🟢";
             });
             call.on('close', () => resetCallUI());
