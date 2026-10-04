@@ -99,7 +99,7 @@
             text-align: left;
         }
 
-        /* --- Saved Contacts Grid & Cards with Direct Video Call Logo --- */
+        /* --- Saved Contacts Grid & Cards --- */
         .contacts-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -143,7 +143,6 @@
         .contact-card h4 { margin: 0; font-size: 13px; color: #f8fafc; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .contact-card p { margin: 2px 0 10px 0; font-size: 11px; color: #94a3b8; }
         
-        /* Direct Video Call Logo Button inside Card */
         .direct-video-btn {
             background: #22c55e;
             color: white;
@@ -162,7 +161,6 @@
         }
         .direct-video-btn:hover { background: #16a34a; transform: scale(1.05); }
 
-        /* Add Contact Form Drawer/Section */
         .add-contact-box {
             background: rgba(15, 23, 42, 0.9);
             border: 1px dashed #475569;
@@ -282,7 +280,7 @@
         .bottom-control-btn.end-call { background: #ef4444 !important; }
         .bottom-control-btn.active-state { background: #ffffff !important; color: #000000 !important; }
 
-        /* --- Incoming Call Modal (WhatsApp Style Popup) --- */
+        /* --- Incoming Call Modal --- */
         #incoming-modal {
             display: none;
             position: fixed;
@@ -408,14 +406,14 @@
         <button id="modeToggleBtn" onclick="toggleAudioVideoMode()" style="background: #334155; margin-top: 4px;">Switch to Audio-Only Mode</button>
         <button onclick="sendWakeUpAlert()" style="background: #047857; margin-top: 4px;">Send Offline Wake-up Ping</button>
 
-        <!-- Speed Dial Contacts Section with Save Form & Direct Video Logo -->
+        <!-- Speed Dial Contacts Section -->
         <div style="margin-top: 15px; text-align: left;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <p style="font-size: 12px; color: #94a3b8; margin: 0;"><b>Speed Dial Contacts:</b></p>
                 <button onclick="toggleAddContactForm()" style="width: auto; padding: 3px 10px; font-size: 11px; margin: 0; background: #0284c7;">+ Naya Contact Jodein</button>
             </div>
 
-            <!-- Manual Contact Saving Form (Hidden by default) -->
+            <!-- Manual Contact Saving Form -->
             <div class="add-contact-box" id="add-contact-form" style="display: none;">
                 <input type="text" id="new-contact-name" placeholder="Dost ka Naam (e.g. Rahul)">
                 <input type="tel" id="new-contact-phone" placeholder="Mobile Number">
@@ -424,9 +422,7 @@
             </div>
 
             <!-- Contacts Grid -->
-            <div class="contacts-grid" id="saved-contacts-container">
-                <!-- Dynamic Cards Here -->
-            </div>
+            <div class="contacts-grid" id="saved-contacts-container"></div>
         </div>
     </div>
 
@@ -438,7 +434,7 @@
         </div>
     </div>
 
-    <!-- Incoming Call Ringing Popup (WhatsApp Style) -->
+    <!-- Incoming Call Ringing Popup -->
     <div id="incoming-modal">
         <div>
             <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">ANDROID PUSH VIDEO CALL</p>
@@ -513,7 +509,7 @@
             detectUserLocation();
             initCamera();
             requestNotificationPermission();
-            renderSavedContacts(); // Ensure contacts render correctly on load
+            renderSavedContacts();
         };
 
         async function detectUserLocation() {
@@ -568,15 +564,19 @@
                 audio: { echoCancellation: true, noiseSuppression: true }
             };
 
-            navigator.mediaDevices.getUserMedia(constraints)
+            return navigator.mediaDevices.getUserMedia(constraints)
             .then(stream => {
                 localStream = stream;
                 if (!isAudioOnly && localVideo) {
                     localVideo.srcObject = stream;
                     localVideo.play().catch(e => console.log(e));
                 }
+                return stream;
             })
-            .catch(err => console.log("Camera error:", err));
+            .catch(err => {
+                console.log("Camera error:", err);
+                throw err;
+            });
         }
 
         function toggleAudioVideoMode() {
@@ -633,11 +633,7 @@
         }
 
         function toggleAddContactForm() {
-            if (addContactForm.style.display === 'none') {
-                addContactForm.style.display = 'block';
-            } else {
-                addContactForm.style.display = 'none';
-            }
+            addContactForm.style.display = addContactForm.style.display === 'none' ? 'block' : 'none';
         }
 
         function manualSaveContact() {
@@ -676,13 +672,7 @@
             }
             savedContactsContainer.innerHTML = '';
             contacts.forEach(c => {
-                let avatarHTML = '';
-                if (c.photo && c.photo.startsWith('http')) {
-                    avatarHTML = `<img src="${c.photo}" alt="img">`;
-                } else {
-                    avatarHTML = `<span>${c.photo || c.name.charAt(0).toUpperCase()}</span>`;
-                }
-
+                let avatarHTML = c.photo && c.photo.startsWith('http') ? `<img src="${c.photo}" alt="img">` : `<span>${c.photo || c.name.charAt(0).toUpperCase()}</span>`;
                 let card = document.createElement('div');
                 card.className = 'contact-card';
                 card.innerHTML = `
@@ -711,7 +701,7 @@
 
                 currentCall.on('stream', (remoteStream) => {
                     remoteVideoFullscreen.srcObject = remoteStream;
-                    remoteVideoFullscreen.play().catch(e => console.log(e)); // FIX: Ensure remote stream plays properly
+                    remoteVideoFullscreen.play().catch(e => console.log(e));
                     activeCallStatus.innerText = "Connected 🟢";
                 });
                 currentCall.on('close', () => resetCallUI());
@@ -743,7 +733,7 @@
 
             call.on('stream', (remoteStream) => {
                 remoteVideoFullscreen.srcObject = remoteStream;
-                remoteVideoFullscreen.play().catch(e => console.log(e)); // FIX: Ensure remote stream plays properly
+                remoteVideoFullscreen.play().catch(e => console.log(e));
                 activeCallStatus.innerText = "Connected 🟢";
             });
             call.on('close', () => resetCallUI());
@@ -787,7 +777,14 @@
 
         function switchCamera() {
             currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-            initCamera();
+            initCamera().then(newStream => {
+                if (currentCall && currentCall.peerConnection) {
+                    const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                    if (videoSender && newStream.getVideoTracks().length > 0) {
+                        videoSender.replaceTrack(newStream.getVideoTracks()[0]);
+                    }
+                }
+            });
         }
 
         function startVoiceInput(targetId, event) {
