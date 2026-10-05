@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sky Global Video Call - Android App & Push Ready</title>
+    <title>Sky Global Video Call - Firebase Ready</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
 
     <style>
         body {
@@ -104,7 +105,6 @@
             text-align: left;
         }
 
-        /* --- Saved Contacts Grid & Cards --- */
         .contacts-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -145,7 +145,6 @@
             height: 100%;
             object-fit: cover;
         }
-        
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -211,7 +210,7 @@
             font-size: 13px;
         }
 
-        /* --- WhatsApp Style Full Screen Calling UI with PiP Local Video --- */
+        /* Call Screen */
         #call-screen {
             display: none;
             position: fixed;
@@ -232,7 +231,6 @@
             object-fit: cover;
             z-index: 1;
         }
-        /* Local Video Picture-in-Picture Box (Top Right Corner) */
         #local-video-pip {
             position: absolute;
             top: 20px;
@@ -255,17 +253,8 @@
             z-index: 10;
             text-shadow: 0 2px 6px rgba(0,0,0,0.8);
         }
-        .call-header-info h3 {
-            margin: 0;
-            font-size: 24px;
-            color: #ffffff;
-            font-weight: 500;
-        }
-        .call-header-info p {
-            margin: 6px 0 0 0;
-            font-size: 15px;
-            color: #cbd5e1;
-        }
+        .call-header-info h3 { margin: 0; font-size: 24px; color: #ffffff; font-weight: 500; }
+        .call-header-info p { margin: 6px 0 0 0; font-size: 15px; color: #cbd5e1; }
 
         .right-action-buttons {
             position: absolute;
@@ -328,7 +317,7 @@
         .bottom-control-btn.end-call { background: #ef4444 !important; }
         .bottom-control-btn.active-state { background: #ffffff !important; color: #000000 !important; }
 
-        /* --- Incoming Call Modal --- */
+        /* Incoming Modal */
         #incoming-modal {
             display: none;
             position: fixed;
@@ -398,11 +387,7 @@
             border: 2px solid #334155;
             overflow: hidden;
         }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        video { width: 100%; height: 100%; object-fit: cover; }
         .label {
             position: absolute;
             top: 6px;
@@ -421,7 +406,7 @@
         <span class="logo-icon">🌐</span>
         <h2>Sky Global Video Call</h2>
     </div>
-    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Android APK & Status Ready</p>
+    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Firebase Cloud Active</p>
 
     <!-- 1. Welcome Page -->
     <div class="card" id="welcome-card">
@@ -452,7 +437,6 @@
         </div>
         <button onclick="connectCall()">Ek-ke-Ek Call Lagayein</button>
         <button id="modeToggleBtn" onclick="toggleAudioVideoMode()" style="background: #334155; margin-top: 4px;">Switch to Audio-Only Mode</button>
-        <button onclick="sendWakeUpAlert()" style="background: #047857; margin-top: 4px;">Send Offline Wake-up Ping</button>
 
         <!-- Speed Dial Contacts Section -->
         <div style="margin-top: 15px; text-align: left;">
@@ -461,7 +445,6 @@
                 <button onclick="toggleAddContactForm()" style="width: auto; padding: 3px 10px; font-size: 11px; margin: 0; background: #0284c7;">+ Naya Contact Jodein</button>
             </div>
 
-            <!-- Manual Contact Saving Form -->
             <div class="add-contact-box" id="add-contact-form" style="display: none;">
                 <input type="text" id="new-contact-name" placeholder="Dost ka Naam (e.g. Rahul)">
                 <input type="tel" id="new-contact-phone" placeholder="Mobile Number">
@@ -469,7 +452,6 @@
                 <button onclick="manualSaveContact()" style="width: 100%; margin: 0; background: #22c55e; padding: 8px;">Contact Save Karein</button>
             </div>
 
-            <!-- Contacts Grid -->
             <div class="contacts-grid" id="saved-contacts-container"></div>
         </div>
     </div>
@@ -482,10 +464,10 @@
         </div>
     </div>
 
-    <!-- Incoming Call Ringing Popup -->
+    <!-- Incoming Call Ringing Popup with Audio Ringtone Element -->
     <div id="incoming-modal">
         <div>
-            <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">ANDROID PUSH VIDEO CALL</p>
+            <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">FIREBASE VIDEO CALL</p>
             <h2 id="incoming-caller-name" style="font-size: 26px; color: white; margin: 0;">Traveler</h2>
             <p style="color: #94a3b8; font-size: 14px;">Incoming Video Call...</p>
         </div>
@@ -498,10 +480,7 @@
 
     <!-- WhatsApp Style Full Screen Calling Interface -->
     <div id="call-screen">
-        <!-- Remote Video Fullscreen Background -->
         <video id="remote-video-fullscreen" autoplay playsinline></video>
-        
-        <!-- Local Video PiP in Top-Right Corner -->
         <video id="local-video-pip" autoplay playsinline muted></video>
 
         <div class="call-header-info">
@@ -521,7 +500,24 @@
         </div>
     </div>
 
+    <!-- Built-in Ringtone Audio Synthesizer -->
+    <audio id="ringtone-audio" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/1357/1357-preview.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
+        // Firebase Configuration Setup
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzs5DgBE83wvYP37xBSYp3Um9j3kahqfo",
+            authDomain: "sky-global-video-call.firebaseapp.com",
+            projectId: "sky-global-video-call",
+            storageBucket: "sky-global-video-call.firebasestorage.app",
+            messagingSenderId: "828409758674",
+            appId: "1:828409758674:web:5f0de6f772e3ff6ab8fe0b",
+            measurementId: "G-CZ7K73WH35"
+        };
+        firebase.initializeApp(firebaseConfig);
+
         const welcomeCard = document.getElementById('welcome-card');
         const dashboardCard = document.getElementById('dashboard-card');
         const userNameInput = document.getElementById('user-name');
@@ -541,6 +537,7 @@
         const netBadgeBox = document.getElementById('net-badge-box');
         const savedContactsContainer = document.getElementById('saved-contacts-container');
         const addContactForm = document.getElementById('add-contact-form');
+        const ringtoneAudio = document.getElementById('ringtone-audio');
 
         let peer;
         let localStream;
@@ -599,8 +596,12 @@
         }
 
         function requestNotificationPermission() {
-            if ("Notification" in window && Notification.permission !== "granted") {
-                Notification.requestPermission();
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        console.log("Notification permission granted.");
+                    }
+                });
             }
         }
 
@@ -650,12 +651,6 @@
             initCamera();
         }
 
-        function sendWakeUpAlert() {
-            const partnerPhone = partnerPhoneInput.value.trim();
-            if (!partnerPhone) { alert("Pehle number dalein!"); return; }
-            alert(`Wake-up Ping successfully sent to Traveler (${partnerPhone})!`);
-        }
-
         function saveUserProfile() {
             const name = userNameInput.value.trim();
             const phone = userPhoneInput.value.trim();
@@ -686,7 +681,21 @@
                 incomingCallObj = call;
                 let callerNumber = call.peer.replace('sky_', '');
                 incomingCallerName.innerText = "Traveler: " + callerNumber;
+                
+                // Play Loud Ringtone & Show Popup
+                if (ringtoneAudio) {
+                    ringtoneAudio.currentTime = 0;
+                    ringtoneAudio.play().catch(e => console.log("Audio play blocked:", e));
+                }
                 incomingModal.style.display = 'flex';
+                
+                if (Notification.permission === "granted") {
+                    new Notification("Incoming Call 📞", {
+                        body: `Traveler (${callerNumber}) is calling you!`,
+                        vibrate: [300, 100, 300]
+                    });
+                }
+                
                 saveContactToHistory(callerNumber, "Traveler " + callerNumber.slice(-4), "👤", true);
             });
         }
@@ -767,131 +776,152 @@
 
         function renderSavedContacts() {
             let contacts = JSON.parse(localStorage.getItem('sky_contacts') || '[]');
+            savedContactsContainer.innerHTML = '';
+
             if (contacts.length === 0) {
-                savedContactsContainer.innerHTML = '<p style="font-size: 11px; color: #64748b; margin: 0; grid-column: span 2;">Abhi koi saved contact nahi hai.</p>';
+                savedContactsContainer.innerHTML = '<p style="font-size:11px; color:#64748b; grid-column:span 2; text-align:center;">Abhi koi contact nahi juda hai.</p>';
                 return;
             }
-            savedContactsContainer.innerHTML = '';
+
             contacts.forEach(c => {
-                let avatarHTML = c.photo && c.photo.startsWith('http') ? `<img src="${c.photo}" alt="img">` : `<span>${c.photo || c.name.charAt(0).toUpperCase()}</span>`;
-                
-                let isOnline = c.online === true;
-                let statusBadgeHTML = isOnline 
-                    ? `<div class="status-badge status-dot-online"><span class="dot dot-green"></span> Online</div>`
-                    : `<div class="status-badge status-dot-offline"><span class="dot dot-red"></span> Offline</div>`;
+                let statusClass = c.online ? "status-dot-online" : "status-dot-offline";
+                let dotClass = c.online ? "dot-green" : "dot-red";
+                let statusText = c.online ? "Online" : "Offline";
+                let avatarContent = c.photo.startsWith('http') ? `<img src="${c.photo}" alt="Avatar">` : c.photo;
 
                 let card = document.createElement('div');
                 card.className = 'contact-card';
                 card.innerHTML = `
-                    <div class="contact-avatar-box">${avatarHTML}</div>
-                    ${statusBadgeHTML}
+                    <div class="status-badge ${statusClass}"><span class="dot ${dotClass}"></span>${statusText}</div>
+                    <div class="contact-avatar-box">${avatarContent}</div>
                     <h4>${c.name}</h4>
                     <p>${c.phone}</p>
-                    <button class="direct-video-btn" onclick="callContact('${c.phone}')" title="Direct Video Call">📹</button>
+                    <button class="direct-video-btn" onclick="callDirectContact('${c.phone}')" title="Call Karein">📞</button>
                 `;
                 savedContactsContainer.appendChild(card);
             });
         }
 
-        function callContact(phone) {
+        function callDirectContact(phone) {
             partnerPhoneInput.value = phone;
             connectCall();
         }
 
-        function acceptIncomingCall() {
-            incomingModal.style.display = 'none';
-            if (incomingCallObj) {
-                currentCall = incomingCallObj;
-                currentCall.answer(localStream);
-                activeCallerName.innerText = "Traveler: " + currentCall.peer.replace('sky_', '');
-                activeCallStatus.innerText = "Connected 🟢";
-                callScreen.style.display = 'block';
+        function connectCall() {
+            const partnerPhone = partnerPhoneInput.value.trim();
+            if (!partnerPhone) { alert("Dost ka mobile number dalein!"); return; }
 
-                currentCall.on('stream', (remoteStream) => {
-                    remoteVideoFullscreen.srcObject = remoteStream;
-                    remoteVideoFullscreen.play().catch(e => console.log(e));
-                    activeCallStatus.innerText = "Connected 🟢";
-                });
-                currentCall.on('close', () => resetCallUI());
-                currentCall.on('error', () => resetCallUI());
-            }
+            let peerId = "sky_" + partnerPhone;
+            activeCallerName.innerText = "Traveler: " + partnerPhone;
+            activeCallStatus.innerText = "Connecting...";
+            callScreen.style.display = 'block';
+
+            initCamera().then(stream => {
+                let call = peer.call(peerId, stream);
+                currentCall = call;
+                setupCallEvents(call);
+            }).catch(err => {
+                alert("Camera access nahi mila!");
+                endCall();
+            });
+        }
+
+        function acceptIncomingCall() {
+            if (ringtoneAudio) { ringtoneAudio.pause(); ringtoneAudio.currentTime = 0; }
+            incomingModal.style.display = 'none';
+            callScreen.style.display = 'block';
+            activeCallStatus.innerText = "Answering...";
+
+            initCamera().then(stream => {
+                incomingCallObj.answer(stream);
+                currentCall = incomingCallObj;
+                setupCallEvents(incomingCallObj);
+            }).catch(err => {
+                alert("Camera access failed!");
+                endCall();
+            });
         }
 
         function rejectIncomingCall() {
+            if (ringtoneAudio) { ringtoneAudio.pause(); ringtoneAudio.currentTime = 0; }
             incomingModal.style.display = 'none';
             if (incomingCallObj) {
-                incomingCallObj.close();
+                try { incomingCallObj.close(); } catch(e){}
+            }
+            incomingCallObj = null;
+        }
+
+        function setupCallEvents(call) {
+            call.on('stream', (remoteStream) => {
+                if (remoteVideoFullscreen) {
+                    remoteVideoFullscreen.srcObject = remoteStream;
+                    remoteVideoFullscreen.play().catch(e => console.log("Remote play error:", e));
+                }
+                activeCallStatus.innerText = "Connected Live 🟢";
+            });
+
+            call.on('close', () => {
+                endCall();
+            });
+
+            call.on('error', (err) => {
+                console.log("Call error:", err);
+                endCall();
+            });
+        }
+
+        function endCall() {
+            if (ringtoneAudio) { ringtoneAudio.pause(); ringtoneAudio.currentTime = 0; }
+            if (currentCall) {
+                try { currentCall.close(); } catch(e){}
+                currentCall = null;
+            }
+            if (incomingCallObj) {
+                try { incomingCallObj.close(); } catch(e){}
                 incomingCallObj = null;
             }
-        }
-
-        function connectCall() {
-            const partnerPhone = partnerPhoneInput.value.trim();
-            if (!partnerPhone) { alert("Dost ka number daalein!"); return; }
-            const partnerPeerId = "sky_" + partnerPhone;
-            
-            saveContactToHistory(partnerPhone, "Traveler " + partnerPhone.slice(-4), "👤", true);
-
-            activeCallerName.innerText = "Traveler: " + partnerPhone;
-            activeCallStatus.innerText = "Calling...";
-            callScreen.style.display = 'block';
-
-            const call = peer.call(partnerPeerId, localStream);
-            currentCall = call;
-
-            call.on('stream', (remoteStream) => {
-                remoteVideoFullscreen.srcObject = remoteStream;
-                remoteVideoFullscreen.play().catch(e => console.log(e));
-                activeCallStatus.innerText = "Connected 🟢";
-            });
-            call.on('close', () => resetCallUI());
-            call.on('error', () => resetCallUI());
-        }
-
-        function toggleMyVideo() {
-            if (localStream && localStream.getVideoTracks().length > 0) {
-                const videoTrack = localStream.getVideoTracks()[0];
-                videoTrack.enabled = !videoTrack.enabled;
-                const btn = document.getElementById('toggle-vid-btn');
-                btn.classList.toggle('active-state', !videoTrack.enabled);
-            }
+            if (remoteVideoFullscreen) remoteVideoFullscreen.srcObject = null;
+            callScreen.style.display = 'none';
+            incomingModal.style.display = 'none';
+            activeCallStatus.innerText = "Connecting...";
+            initCamera();
         }
 
         function toggleMic() {
-            if (localStream && localStream.getAudioTracks().length > 0) {
-                const audioTrack = localStream.getAudioTracks()[0];
+            if (!localStream) return;
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
                 const btn = document.getElementById('mic-mute-btn');
                 btn.classList.toggle('active-state', !audioTrack.enabled);
+                btn.innerHTML = audioTrack.enabled ? "🎤" : "🔇";
+            }
+        }
+
+        function toggleMyVideo() {
+            if (!localStream) return;
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                const btn = document.getElementById('toggle-vid-btn');
+                btn.classList.toggle('active-state', !videoTrack.enabled);
+                btn.innerHTML = videoTrack.enabled ? "📹" : "📷";
             }
         }
 
         function toggleSpeaker() {
-            const btn = document.getElementById('speaker-btn');
-            btn.classList.toggle('active-state');
             if (remoteVideoFullscreen) {
                 remoteVideoFullscreen.muted = !remoteVideoFullscreen.muted;
+                const btn = document.getElementById('speaker-btn');
+                btn.classList.toggle('active-state', remoteVideoFullscreen.muted);
+                btn.innerText = remoteVideoFullscreen.muted ? "🔇" : "🔊";
             }
-        }
-
-        function endCall() {
-            if (currentCall) {
-                currentCall.close();
-                currentCall = null;
-            }
-            resetCallUI();
-        }
-
-        function resetCallUI() {
-            callScreen.style.display = 'none';
-            remoteVideoFullscreen.srcObject = null;
-            if (localVideoPip) localVideoPip.srcObject = localStream;
         }
 
         function startVoiceInput(targetId, event) {
             event.preventDefault();
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert("Aapka browser Voice Input support nahi karta!");
+                alert("Aapka browser voice input support nahi karta.");
                 return;
             }
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -899,10 +929,10 @@
             recognition.lang = 'hi-IN';
             recognition.start();
 
-            recognition.onresult = function(e) {
-                let text = e.results[0][0].transcript;
-                text = text.replace(/\s+/g, '').replace(/[^0-9]/g, '');
-                document.getElementById(targetId).value = text;
+            recognition.onresult = function(event) {
+                let speechText = event.results[0][0].transcript;
+                speechText = speechText.replace(/\s+/g, '').replace(/[^0-9]/g, '');
+                document.getElementById(targetId).value = speechText;
             };
         }
     </script>
