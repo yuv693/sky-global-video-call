@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     
-    <!-- Firebase SDKs (Optional/Ready for Push Integration) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
@@ -146,7 +146,6 @@
             object-fit: cover;
         }
         
-        /* Online / Offline Status Badge Style */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -212,7 +211,7 @@
             font-size: 13px;
         }
 
-        /* --- WhatsApp Style Full Screen Calling UI --- */
+        /* --- WhatsApp Style Full Screen Calling UI with PiP Local Video --- */
         #call-screen {
             display: none;
             position: fixed;
@@ -232,6 +231,19 @@
             height: 100%;
             object-fit: cover;
             z-index: 1;
+        }
+        /* Local Video Picture-in-Picture Box (Top Right Corner) */
+        #local-video-pip {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 100px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            z-index: 5;
+            background: #222;
         }
 
         .call-header-info {
@@ -257,7 +269,7 @@
 
         .right-action-buttons {
             position: absolute;
-            top: 130px;
+            top: 180px;
             right: 20px;
             display: flex;
             flex-direction: column;
@@ -453,7 +465,7 @@
             <div class="add-contact-box" id="add-contact-form" style="display: none;">
                 <input type="text" id="new-contact-name" placeholder="Dost ka Naam (e.g. Rahul)">
                 <input type="tel" id="new-contact-phone" placeholder="Mobile Number">
-                <input type="text" id="new-contact-photo" placeholder="Photo URL ya Emoji (e.g. 👨‍‍‍💻 ya https://...)">
+                <input type="text" id="new-contact-photo" placeholder="Photo URL ya Emoji (e.g. 👨💻 ya https://...)">
                 <button onclick="manualSaveContact()" style="width: 100%; margin: 0; background: #22c55e; padding: 8px;">Contact Save Karein</button>
             </div>
 
@@ -486,7 +498,11 @@
 
     <!-- WhatsApp Style Full Screen Calling Interface -->
     <div id="call-screen">
+        <!-- Remote Video Fullscreen Background -->
         <video id="remote-video-fullscreen" autoplay playsinline></video>
+        
+        <!-- Local Video PiP in Top-Right Corner -->
+        <video id="local-video-pip" autoplay playsinline muted></video>
 
         <div class="call-header-info">
             <h3 id="active-caller-name">Traveler</h3>
@@ -514,6 +530,7 @@
         const displayMyId = document.getElementById('display-my-id');
         const partnerPhoneInput = document.getElementById('partner-phone-input');
         const localVideo = document.getElementById('local-video');
+        const localVideoPip = document.getElementById('local-video-pip');
         const remoteVideoFullscreen = document.getElementById('remote-video-fullscreen');
         const callScreen = document.getElementById('call-screen');
         const incomingModal = document.getElementById('incoming-modal');
@@ -603,9 +620,9 @@
             return navigator.mediaDevices.getUserMedia(constraints)
             .then(stream => {
                 localStream = stream;
-                if (!isAudioOnly && localVideo) {
-                    localVideo.srcObject = stream;
-                    localVideo.play().catch(e => console.log(e));
+                if (!isAudioOnly) {
+                    if (localVideo) localVideo.srcObject = stream;
+                    if (localVideoPip) localVideoPip.srcObject = stream;
                 }
                 return stream;
             })
@@ -626,6 +643,11 @@
             if (modeBtn) {
                 modeBtn.innerText = isAudioOnly ? "Switch to Video Mode" : "Switch to Audio-Only Mode";
             }
+        }
+
+        function switchCamera() {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            initCamera();
         }
 
         function sendWakeUpAlert() {
@@ -830,59 +852,57 @@
             if (localStream && localStream.getVideoTracks().length > 0) {
                 const videoTrack = localStream.getVideoTracks()[0];
                 videoTrack.enabled = !videoTrack.enabled;
-                document.getElementById('toggle-vid-btn').classList.toggle('active-state');
+                const btn = document.getElementById('toggle-vid-btn');
+                btn.classList.toggle('active-state', !videoTrack.enabled);
+            }
+        }
+
+        function toggleMic() {
+            if (localStream && localStream.getAudioTracks().length > 0) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                audioTrack.enabled = !audioTrack.enabled;
+                const btn = document.getElementById('mic-mute-btn');
+                btn.classList.toggle('active-state', !audioTrack.enabled);
             }
         }
 
         function toggleSpeaker() {
-            document.getElementById('speaker-btn').classList.toggle('active-state');
-        }
-
-        function toggleMic() {
-            if (localStream) {
-                const audioTrack = localStream.getAudioTracks()[0];
-                audioTrack.enabled = !audioTrack.enabled;
-                document.getElementById('mic-mute-btn').classList.toggle('active-state');
+            const btn = document.getElementById('speaker-btn');
+            btn.classList.toggle('active-state');
+            if (remoteVideoFullscreen) {
+                remoteVideoFullscreen.muted = !remoteVideoFullscreen.muted;
             }
         }
 
         function endCall() {
-            if (currentCall) currentCall.close();
+            if (currentCall) {
+                currentCall.close();
+                currentCall = null;
+            }
             resetCallUI();
         }
 
         function resetCallUI() {
             callScreen.style.display = 'none';
-            incomingModal.style.display = 'none';
-            if (remoteVideoFullscreen.srcObject) {
-                remoteVideoFullscreen.srcObject = null;
-            }
-            currentCall = null;
-            incomingCallObj = null;
-            checkAllContactsStatus();
-        }
-
-        function switchCamera() {
-            currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-            initCamera().then(newStream => {
-                if (currentCall && currentCall.peerConnection) {
-                    const videoSender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-                    if (videoSender && newStream.getVideoTracks().length > 0) {
-                        videoSender.replaceTrack(newStream.getVideoTracks()[0]);
-                    }
-                }
-            });
+            remoteVideoFullscreen.srcObject = null;
+            if (localVideoPip) localVideoPip.srcObject = localStream;
         }
 
         function startVoiceInput(targetId, event) {
-            const inputField = document.getElementById(targetId);
+            event.preventDefault();
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("Aapka browser Voice Input support nahi karta!");
+                return;
+            }
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) { alert("Voice input supported nahi hai."); return; }
             const recognition = new SpeechRecognition();
             recognition.lang = 'hi-IN';
             recognition.start();
-            recognition.onresult = (event) => {
-                inputField.value = event.results[0][0].transcript.replace(/\D/g, '');
+
+            recognition.onresult = function(e) {
+                let text = e.results[0][0].transcript;
+                text = text.replace(/\s+/g, '').replace(/[^0-9]/g, '');
+                document.getElementById(targetId).value = text;
             };
         }
     </script>
