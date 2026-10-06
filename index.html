@@ -825,7 +825,12 @@
             const partnerPhone = partnerPhoneInput.value.trim();
             if (!partnerPhone) { alert("Dost ka mobile number dalein!"); return; }
 
-            let peerId = "sky_" + partnerPhone;
+          // Trigger background call notification via Make.com webhook
+            let contacts = JSON.parse(localStorage.getItem('sky_contacts') || '[]');
+            let targetContact = contacts.find(c => c.phone === partnerPhone);
+            if (targetContact && targetContact.fcmToken) {
+                sendCallNotification(targetContact.fcmToken, localStorage.getItem('sky_user_name') || "Traveler");
+            }  let peerId = "sky_" + partnerPhone;
             activeCallerName.innerText = "Traveler: " + partnerPhone;
             activeCallStatus.innerText = "Connecting...";
             callScreen.style.display = 'block';
