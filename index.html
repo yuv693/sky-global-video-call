@@ -506,7 +506,21 @@
     </audio>
 
     <script>
-        // Firebase Configuration Setup
+     function sendCallNotification(receiverFcmToken, callerName) {
+    if (!receiverFcmToken) return;
+    fetch('https://hook.eu1.make.com/3ha4f3e8jv6i550a2hgcsmpfpuj4tc2j', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            fcmToken: receiverFcmToken,
+            caller: callerName
+        })
+    })
+    .then(response => console.log('Notification sent successfully!'))
+    .catch(error => console.error('Error sending notification:', error));
+}   // Firebase Configuration Setup
         const firebaseConfig = {
             apiKey: "AIzaSyBzs5DgBE83wvYP37xBSYp3Um9j3kahqfo",
             authDomain: "sky-global-video-call.firebaseapp.com",
