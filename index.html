@@ -406,7 +406,7 @@
         <span class="logo-icon">🌐</span>
         <h2>Sky Global Video Call</h2>
     </div>
-    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Firebase Cloud Active</p>
+    <p id="main-subtext" style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 15px;">🛰 Render Backend Active</p>
 
     <!-- 1. Welcome Page -->
     <div class="card" id="welcome-card">
@@ -467,7 +467,7 @@
     <!-- Incoming Call Ringing Popup with Audio Ringtone Element -->
     <div id="incoming-modal">
         <div>
-            <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">FIREBASE VIDEO CALL</p>
+            <p style="color: #00a884; font-size: 14px; letter-spacing: 1px; margin-bottom: 5px;">SKY GLOBAL VIDEO CALL</p>
             <h2 id="incoming-caller-name" style="font-size: 26px; color: white; margin: 0;">Traveler</h2>
             <p style="color: #94a3b8; font-size: 14px;">Incoming Video Call...</p>
         </div>
@@ -506,21 +506,24 @@
     </audio>
 
     <script>
-     function sendCallNotification(receiverFcmToken, callerName) {
-    if (!receiverFcmToken) return;
-    fetch('https://hook.eu1.make.com/3ha4f3e8jv6i550a2hgcsmpfpuj4tc2j', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            fcmToken: receiverFcmToken,
-            caller: callerName
-        })
-    })
-    .then(response => console.log('Notification sent successfully!'))
-    .catch(error => console.error('Error sending notification:', error));
-}   // Firebase Configuration Setup
+        // Updated Render Backend Notification Trigger Function
+        function sendCallNotification(receiverFcmToken, callerName) {
+            if (!receiverFcmToken) return;
+            fetch('https://sky-global-video-call-1.onrender.com/send-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fcmToken: receiverFcmToken,
+                    caller: callerName
+                })
+            })
+            .then(response => console.log('Notification sent successfully via Render!'))
+            .catch(error => console.error('Error sending notification:', error));
+        }
+
+        // Firebase Configuration Setup
         const firebaseConfig = {
             apiKey: "AIzaSyBzs5DgBE83wvYP37xBSYp3Um9j3kahqfo",
             authDomain: "sky-global-video-call.firebaseapp.com",
@@ -696,7 +699,6 @@
                 let callerNumber = call.peer.replace('sky_', '');
                 incomingCallerName.innerText = "Traveler: " + callerNumber;
                 
-                // Play Loud Ringtone & Show Popup
                 if (ringtoneAudio) {
                     ringtoneAudio.currentTime = 0;
                     ringtoneAudio.play().catch(e => console.log("Audio play blocked:", e));
@@ -825,64 +827,52 @@
             const partnerPhone = partnerPhoneInput.value.trim();
             if (!partnerPhone) { alert("Dost ka mobile number dalein!"); return; }
 
-          // Trigger background call notification via Make.com webhook
             let contacts = JSON.parse(localStorage.getItem('sky_contacts') || '[]');
             let targetContact = contacts.find(c => c.phone === partnerPhone);
-            if (targetContact && targetContact.fcmToken) {
-                sendCallNotification(targetContact.fcmToken, localStorage.getItem('sky_user_name') || "Traveler");
-            }  let peerId = "sky_" + partnerPhone;
-            activeCallerName.innerText = "Traveler: " + partnerPhone;
-            activeCallStatus.innerText = "Connecting...";
+            
+            sendCallNotification(targetContact ? targetContact.fcmToken : null, localStorage.getItem('sky_user_name'));
+
+            activeCallerName.innerText = targetContact ? targetContact.name : partnerPhone;
+            activeCallStatus.innerText = "Calling...";
             callScreen.style.display = 'block';
 
-            initCamera().then(stream => {
-                let call = peer.call(peerId, stream);
-                currentCall = call;
-                setupCallEvents(call);
-            }).catch(err => {
-                alert("Camera access nahi mila!");
-                endCall();
-            });
+            const call = peer.call("sky_" + partnerPhone, localStream);
+            setupCallEvents(call);
         }
 
         function acceptIncomingCall() {
-            if (ringtoneAudio) { ringtoneAudio.pause(); ringtoneAudio.currentTime = 0; }
-            incomingModal.style.display = 'none';
-            callScreen.style.display = 'block';
-            activeCallStatus.innerText = "Answering...";
+            if (incomingModal) incomingModal.style.display = 'none';
+            if (ringtoneAudio) ringtoneAudio.pause();
 
-            initCamera().then(stream => {
-                incomingCallObj.answer(stream);
-                currentCall = incomingCallObj;
+            if (incomingCallObj) {
+                let callerNumber = incomingCallObj.peer.replace('sky_', '');
+                activeCallerName.innerText = "Traveler " + callerNumber;
+                activeCallStatus.innerText = "Connected";
+                callScreen.style.display = 'block';
+
+                incomingCallObj.answer(localStream);
                 setupCallEvents(incomingCallObj);
-            }).catch(err => {
-                alert("Camera access failed!");
-                endCall();
-            });
+            }
         }
 
         function rejectIncomingCall() {
-            if (ringtoneAudio) { ringtoneAudio.pause(); ringtoneAudio.currentTime = 0; }
-            incomingModal.style.display = 'none';
+            if (incomingModal) incomingModal.style.display = 'none';
+            if (ringtoneAudio) ringtoneAudio.pause();
             if (incomingCallObj) {
-                try { incomingCallObj.close(); } catch(e){}
+                incomingCallObj.close();
+                incomingCallObj = null;
             }
-            incomingCallObj = null;
         }
 
         function setupCallEvents(call) {
+            currentCall = call;
             call.on('stream', (remoteStream) => {
-                if (remoteVideoFullscreen) {
-                    remoteVideoFullscreen.srcObject = remoteStream;
-                    remoteVideoFullscreen.play().catch(e => console.log("Remote play error:", e));
-                }
-                activeCallStatus.innerText = "Connected Live 🟢";
+                remoteVideoFullscreen.srcObject = remoteStream;
+                activeCallStatus.innerText = "Connected";
             });
-
             call.on('close', () => {
                 endCall();
             });
-
             call.on('error', (err) => {
                 console.log("Call error:", err);
                 endCall();
@@ -890,51 +880,39 @@
         }
 
         function endCall() {
-            if (ringtoneAudio) { ringtoneAudio.pause(); ringtoneAudio.currentTime = 0; }
             if (currentCall) {
-                try { currentCall.close(); } catch(e){}
+                currentCall.close();
                 currentCall = null;
             }
-            if (incomingCallObj) {
-                try { incomingCallObj.close(); } catch(e){}
-                incomingCallObj = null;
-            }
-            if (remoteVideoFullscreen) remoteVideoFullscreen.srcObject = null;
+            if (ringtoneAudio) ringtoneAudio.pause();
             callScreen.style.display = 'none';
-            incomingModal.style.display = 'none';
+            if (incomingModal) incomingModal.style.display = 'none';
             activeCallStatus.innerText = "Connecting...";
-            initCamera();
-        }
-
-        function toggleMic() {
-            if (!localStream) return;
-            const audioTrack = localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                const btn = document.getElementById('mic-mute-btn');
-                btn.classList.toggle('active-state', !audioTrack.enabled);
-                btn.innerHTML = audioTrack.enabled ? "🎤" : "🔇";
-            }
         }
 
         function toggleMyVideo() {
-            if (!localStream) return;
-            const videoTrack = localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                const btn = document.getElementById('toggle-vid-btn');
-                btn.classList.toggle('active-state', !videoTrack.enabled);
-                btn.innerHTML = videoTrack.enabled ? "📹" : "📷";
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = !videoTrack.enabled;
+                    document.getElementById('toggle-vid-btn').classList.toggle('active-state', !videoTrack.enabled);
+                }
+            }
+        }
+
+        function toggleMic() {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                    document.getElementById('mic-mute-btn').classList.toggle('active-state', !audioTrack.enabled);
+                }
             }
         }
 
         function toggleSpeaker() {
-            if (remoteVideoFullscreen) {
-                remoteVideoFullscreen.muted = !remoteVideoFullscreen.muted;
-                const btn = document.getElementById('speaker-btn');
-                btn.classList.toggle('active-state', remoteVideoFullscreen.muted);
-                btn.innerText = remoteVideoFullscreen.muted ? "🔇" : "🔊";
-            }
+            remoteVideoFullscreen.muted = !remoteVideoFullscreen.muted;
+            document.getElementById('speaker-btn').classList.toggle('active-state', remoteVideoFullscreen.muted);
         }
 
         function startVoiceInput(targetId, event) {
@@ -946,13 +924,11 @@
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.lang = 'hi-IN';
-            recognition.start();
-
             recognition.onresult = function(event) {
-                let speechText = event.results[0][0].transcript;
-                speechText = speechText.replace(/\s+/g, '').replace(/[^0-9]/g, '');
-                document.getElementById(targetId).value = speechText;
+                const transcript = event.results[0][0].transcript.replace(/\D/g, '');
+                document.getElementById(targetId).value = transcript;
             };
+            recognition.start();
         }
     </script>
 </body>
