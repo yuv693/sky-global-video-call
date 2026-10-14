@@ -4,6 +4,11 @@ const app = express();
 
 app.use(express.json());
 
+// Root route to prevent "Cannot GET /" and keep UptimeRobot happy
+app.get('/', (req, res) => {
+    res.status(200).send('Sky Global Backend is Live and Running!');
+});
+
 // Main Call Notification Endpoint
 app.post('/send-notification', async (req, res) => {
     const { fcmToken, caller } = req.body;
@@ -14,11 +19,8 @@ app.post('/send-notification', async (req, res) => {
         return res.status(400).json({ success: false, message: "No FCM token provided!" });
     }
 
-    // Firebase Messaging Triggering Logic
     try {
-        // Notification payload sent to receiver's phone
         console.log(`Sending Push Notification to Token: ${fcmToken}`);
-
         res.status(200).json({ 
             success: true, 
             message: "Call Alert Sent via Render Backend!" 
